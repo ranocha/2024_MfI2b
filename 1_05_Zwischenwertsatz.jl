@@ -14,97 +14,130 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 9d669dc7-2d81-4e04-b5dd-782c65a9e421
+# ╔═╡ f05a5972-58b1-4788-a0a8-24966d6714da
 begin
 	using PlutoUI
 	using PlutoUI: Slider
 end
 
-# ╔═╡ e21f7893-67e3-42ba-82e8-1297502cc1ea
+# ╔═╡ 4d572a00-e3f6-483c-873a-d946ab49539b
 begin
 	using CairoMakie
 	set_theme!(theme_latexfonts(); 
 			   fontsize = 16,
-			   Lines = (linewidth = 2,))
+			   Lines = (linewidth = 2,),
+			   markersize = 16)
 end
 
-# ╔═╡ bb969271-42c4-4c52-b4f8-949a7ed1a60d
-using LaTeXStrings
+# ╔═╡ 960f0f1d-8e15-415b-854b-46f3b9a78c9b
+using PrettyTables
+
+# ╔═╡ 0db61712-8066-40c9-909e-4c19a01a61eb
+using DoubleFloats
 
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
-# 1.3 Grenzwerte
+# 1.5 Zwischenwertsatz
+
+Wir vergleichen das *Heron-Verfahren* aus Abschnitt 1.4 mit dem *Bisektionsverfahren* aus Abschnitt 1.5 zur Berechnung von Wurzeln.
+
+Das Heron-Verfahren verwendet die Rekursionsformel
+
+$$a_0 = x, \quad a_{n+1} = \frac{1}{2} \left( a_n + \frac{x}{a_n} \right).$$
+
+Das Bisektionsverfahren such nach einer Nullstelle von 
+$f\colon [a, b] \to \mathbb{R}$, prüft dazu jeweils die Funktionswerte 
+im Mittelpunkt eines Intervalls $[a_n, b_n]$ und aktualisiert eine Grenze.
 """
 
-# ╔═╡ 43310354-7c1c-4af8-871e-144f06839745
-md"""
-## Die Funktion $x \mapsto 1 / x$
+# ╔═╡ 422924ed-b52f-4de2-a7e9-a5645abffdea
+heron_step(a, x) = (a + x / a) / 2
 
-Die Funktion ist stetig auf $\mathbb{R} \setminus \{0\}$ aber nicht stetig in $x = 0$ fortsetzbar.
-"""
-
-# ╔═╡ 744f1cbe-1105-4ac1-9bcd-4abd3f53495a
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"y")
-	x = range(-1.0, 1.0, length = 10^3 + 1) |> collect
-	x[(begin + end) ÷ 2] = NaN # to separate the lines
-	y = @. inv(x)
-	lines!(ax, x, y)
-	fig
+# ╔═╡ 42c85af2-1f0f-42b8-90db-bd62aa5d5727
+function bisection_step(f, a, b)
+	c = (a + b) / 2
+	y = f(c)
+	if iszero(y)
+		return c, c
+	elseif y < 0
+		return c, b
+	else # y > 0
+		return a, c
+	end
 end
 
-# ╔═╡ b83b5e3e-fa7b-4375-a0ba-6b6ed54bf9ca
+# ╔═╡ 7b68575f-c8cb-4a14-b352-5a115258846c
 md"""
-## Die Funktion $x \mapsto \sin(1 / x)$
+Um das Bisektionsverfahren zur Berechnung einer Wurzel $\sqrt{x}$ zu verwenden, 
+formulieren wir das Problem als Nullstellensuche mit
 
-Die Funktion ist stetig auf $\mathbb{R} \setminus \{0\}$ aber nicht stetig in $x = 0$ fortsetzbar.
-"""
+$$f(y) = y^2 - x$$
 
-# ╔═╡ adf1e844-b990-42d4-a7c7-32be901fd1d9
-md"""
-``x_\mathrm{max}`` = $(@bind xmax_sin_1_x Slider(10.0 .^ range(-2, 1, length = 101), default=10, show_value=true))
+im Intervall $[1, x]$ für $x > 1$ und $[x, 1]$ für $x < 1$.
+Damit erhalten wir die folgenden Ergebnisse.
 """
 
 # ╔═╡ 62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
+md"""
+`T` = $(@bind T Slider([Float32, Float64, Double64, BigFloat], default=Float64, show_value=true))
+"""
+
+# ╔═╡ 4b7df0c1-3b96-4b45-b793-13da1c087968
+md"""
+``x`` = $(@bind x Slider(range(parse(T, "0.01"), 10, step = parse(T, "0.01")), default=2, show_value=true))
+
+mit ``\sqrt{x} \approx`` $(sqrt(x))
+"""
+
+# ╔═╡ 3dd39638-f3c8-4306-8d6c-7ce15c0efa6e
 let
 	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	x = range(-xmax_sin_1_x, xmax_sin_1_x, length = 5 * 10^4)
-	y = @. sin(1 / x)
-	lines!(ax, x, y)
+	ax = Axis(fig[1, 1]; xlabel = L"y", ylabel = L"f(y)")
+	xmin = ifelse(x < 1, x, one(x))
+	xmax = ifelse(x > 1, x, one(x))
+	y = range(xmin, xmax, length = 10^3)
+	lines!(ax, y, @. y^2 - x)
+	scatter!(sqrt(x), zero(x); marker = :cross)
 	fig
 end
 
-# ╔═╡ 7808c94f-3903-4b51-a927-4044fe0ed6e2
-md"""
-## Die Funktion $x \mapsto x \sin(1 / x)$
+# ╔═╡ 9de27a7b-1cb5-463b-acaa-4ced69419f71
+let x = x
+	steps = 1:60
+	
+	heron = accumulate(steps; init = x) do a, _
+		heron_step(a, x)
+	end
 
-Die Funktion ist stetig auf $\mathbb{R} \setminus \{0\}$ und stetig in $x = 0$ fortsetzbar mit Grenzwert $0$.
-"""
+	xmin = ifelse(x < 1, x, one(x))
+	xmax = ifelse(x > 1, x, one(x))
+	bisection = accumulate(steps; init = (xmin, xmax)) do ab, _
+		a, b = ab
+		bisection_step(a, b) do y
+			y^2 - x
+		end
+	end
+	bisection_a = first.(bisection)
+	bisection_b = last.(bisection)
+	bisection_c = @. (bisection_a + bisection_b) / 2
 
-# ╔═╡ 4ce73be2-0dcb-4f1a-bdb7-40741b7d9f79
-md"""
-``x_\mathrm{max}`` = $(@bind xmax_x_sin_1_x Slider(10.0 .^ range(-2, 1, length = 101), default=10, show_value=true))
-"""
-
-# ╔═╡ a95d9594-cdd5-431c-9ea1-7d2e105b08e6
-let
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	x = range(-xmax_x_sin_1_x, xmax_x_sin_1_x, length = 5 * 10^4)
-	y = @. x * sin(1 / x)
-	lines!(ax, x, y)
-	fig
+	data = hcat(heron, abs.(heron .- sqrt(x)), 
+				bisection_a, bisection_b, bisection_b - bisection_a)
+	header = ["Heron", "Heron error", "Bisection a", "Bisection b", "Bisection range"]
+	formatters = (ft_printf("%1.12f", [1, 3, 4]),
+				  ft_printf("%1.3e", [2, 5]))
+	
+	pretty_table(HTML, data; header, alignment = :l, formatters,
+							 row_labels = axes(data, 1))
 end
 
-# ╔═╡ dc5710c9-44e2-4f3b-9abc-77821aa9eea0
+# ╔═╡ 9907266d-12e0-47ab-a2ee-9da6c7e1b116
 md"""
 ## Fazit
 
-Insbesondere folgt aus diesen Beispielen, dass nur die Stetigkeit
-alleine nicht ausreicht, um eine Funktion numerisch gut approximieren
-zu können. Deshalb werden wir weitere Konzepte benötigen.
+Das Heron-Verfahren ist klar besser als das Bisektions-Verfahren in diesem Fall.
+Wir werden später sehen, dass das Heron-Verfahren speziell das Newton-Verfahren
+zur Bestimmung von Nullstellen differenzierbarer Funktionen ist.
 """
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
@@ -138,13 +171,15 @@ _First, we will install (and compile) some packages. This can take a few minutes
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
 
 [compat]
 CairoMakie = "~0.12.9"
-LaTeXStrings = "~1.3.1"
+DoubleFloats = "~1.4.0"
 PlutoUI = "~0.7.60"
+PrettyTables = "~2.3.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -153,7 +188,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "289a5a453e7784db5d5154225f1973c747661f2a"
+project_hash = "2e438fe8fbfb64be36308476c7089f4f23d08aff"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -345,6 +380,11 @@ git-tree-sha1 = "439e35b0b36e2e5881738abc8857bd92ad6ff9a8"
 uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.6.3"
 
+[[deps.Crayons]]
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
+uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+version = "4.1.1"
+
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -396,6 +436,12 @@ deps = ["LibGit2"]
 git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.3"
+
+[[deps.DoubleFloats]]
+deps = ["GenericLinearAlgebra", "LinearAlgebra", "Polynomials", "Printf", "Quadmath", "Random", "Requires", "SpecialFunctions"]
+git-tree-sha1 = "98d485da59c3f9d511429bdcb41b0762bf6ee1d5"
+uuid = "497a8b3b-efae-58df-a0af-a86822472b78"
+version = "1.4.0"
 
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
@@ -526,6 +572,16 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1ed150b39aebcc805c26b93a8d0122c940f64ce2"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.14+0"
+
+[[deps.Future]]
+deps = ["Random"]
+uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
+
+[[deps.GenericLinearAlgebra]]
+deps = ["LinearAlgebra", "Printf", "Random", "libblastrampoline_jll"]
+git-tree-sha1 = "02be7066f936af6b04669f7c370a31af9036c440"
+uuid = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
+version = "0.3.11"
 
 [[deps.GeoFormatTypes]]
 git-tree-sha1 = "59107c179a586f0fe667024c5eb7033e81333271"
@@ -699,16 +755,12 @@ version = "0.22.16"
 git-tree-sha1 = "dba9ddf07f77f60450fe5d2e2beb9854d9a49bd0"
 uuid = "8197267c-284f-5f27-9208-e0e47529a953"
 version = "0.7.10"
+weakdeps = ["Random", "RecipesBase", "Statistics"]
 
     [deps.IntervalSets.extensions]
     IntervalSetsRandomExt = "Random"
     IntervalSetsRecipesBaseExt = "RecipesBase"
     IntervalSetsStatisticsExt = "Statistics"
-
-    [deps.IntervalSets.weakdeps]
-    Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-    RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
-    Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "630b497eafcc20001bba38a4651b327dcfc491d2"
@@ -1103,6 +1155,24 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
+[[deps.Polynomials]]
+deps = ["LinearAlgebra", "RecipesBase", "Requires", "Setfield", "SparseArrays"]
+git-tree-sha1 = "1a9cfb2dc2c2f1bd63f1906d72af39a79b49b736"
+uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+version = "4.0.11"
+
+    [deps.Polynomials.extensions]
+    PolynomialsChainRulesCoreExt = "ChainRulesCore"
+    PolynomialsFFTWExt = "FFTW"
+    PolynomialsMakieCoreExt = "MakieCore"
+    PolynomialsMutableArithmeticsExt = "MutableArithmetics"
+
+    [deps.Polynomials.weakdeps]
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+    MakieCore = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
+    MutableArithmetics = "d8a4904e-b15c-11e9-3269-09a3773c0cb0"
+
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
@@ -1114,6 +1184,12 @@ deps = ["TOML"]
 git-tree-sha1 = "9306f6085165d270f7e3db02af26a400d580f5c6"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.4.3"
+
+[[deps.PrettyTables]]
+deps = ["Crayons", "LaTeXStrings", "Markdown", "PrecompileTools", "Printf", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "66b20dd35966a748321d3b2537c4584cf40387c7"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "2.3.2"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -1148,6 +1224,12 @@ version = "2.11.0"
     [deps.QuadGK.weakdeps]
     Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
+[[deps.Quadmath]]
+deps = ["Compat", "Printf", "Random", "Requires"]
+git-tree-sha1 = "67fe599f02c3f7be5d97310674cd05429d6f1b42"
+uuid = "be4d8f0f-7fa4-5f49-b795-2f01399ab2dd"
+version = "0.5.10"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -1170,6 +1252,12 @@ weakdeps = ["FixedPointNumbers"]
 
     [deps.Ratios.extensions]
     RatiosFixedPointNumbersExt = "FixedPointNumbers"
+
+[[deps.RecipesBase]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "5c3d09cc4f31f5fc6af001c250bf1278733100ff"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "1.3.4"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -1223,6 +1311,12 @@ version = "1.2.1"
 
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.Setfield]]
+deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
+git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
+uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "1.1.1"
 
 [[deps.ShaderAbstractions]]
 deps = ["ColorTypes", "FixedPointNumbers", "GeometryBasics", "LinearAlgebra", "Observables", "StaticArrays", "StructArrays", "Tables"]
@@ -1334,6 +1428,12 @@ version = "1.3.2"
     [deps.StatsFuns.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
     InverseFunctions = "3587e190-3f89-42d0-90ee-14403ec27112"
+
+[[deps.StringManipulation]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "a04cabe79c5f01f4d723cc6704070ada0b9d46d5"
+uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
+version = "0.3.4"
 
 [[deps.StructArrays]]
 deps = ["ConstructionBase", "DataAPI", "Tables"]
@@ -1596,23 +1696,23 @@ version = "3.6.0+0"
 
 # ╔═╡ Cell order:
 # ╟─e6c64c80-773b-11ef-2379-bf6609137e69
-# ╟─43310354-7c1c-4af8-871e-144f06839745
-# ╠═744f1cbe-1105-4ac1-9bcd-4abd3f53495a
-# ╟─b83b5e3e-fa7b-4375-a0ba-6b6ed54bf9ca
-# ╠═adf1e844-b990-42d4-a7c7-32be901fd1d9
-# ╠═62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
-# ╟─7808c94f-3903-4b51-a927-4044fe0ed6e2
-# ╟─4ce73be2-0dcb-4f1a-bdb7-40741b7d9f79
-# ╠═a95d9594-cdd5-431c-9ea1-7d2e105b08e6
-# ╟─dc5710c9-44e2-4f3b-9abc-77821aa9eea0
+# ╠═422924ed-b52f-4de2-a7e9-a5645abffdea
+# ╠═42c85af2-1f0f-42b8-90db-bd62aa5d5727
+# ╟─7b68575f-c8cb-4a14-b352-5a115258846c
+# ╟─3dd39638-f3c8-4306-8d6c-7ce15c0efa6e
+# ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
+# ╟─4b7df0c1-3b96-4b45-b793-13da1c087968
+# ╠═9de27a7b-1cb5-463b-acaa-4ced69419f71
+# ╟─9907266d-12e0-47ab-a2ee-9da6c7e1b116
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
 # ╟─4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
 # ╠═42fa44f5-06df-41a1-9b33-71386a0cb6d2
 # ╟─e771a1f9-6813-4383-b34d-83530de4aa2e
-# ╠═9d669dc7-2d81-4e04-b5dd-782c65a9e421
-# ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
-# ╠═bb969271-42c4-4c52-b4f8-949a7ed1a60d
+# ╠═f05a5972-58b1-4788-a0a8-24966d6714da
+# ╠═4d572a00-e3f6-483c-873a-d946ab49539b
+# ╠═960f0f1d-8e15-415b-854b-46f3b9a78c9b
+# ╠═0db61712-8066-40c9-909e-4c19a01a61eb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
