@@ -34,7 +34,6 @@ using LaTeXStrings
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
 # 1.3 Grenzwerte
-
 """
 
 # ╔═╡ 43310354-7c1c-4af8-871e-144f06839745
@@ -47,7 +46,7 @@ Die Funktion ist stetig auf $\mathbb{R} \setminus \{0\}$ aber nicht stetig in $x
 # ╔═╡ 744f1cbe-1105-4ac1-9bcd-4abd3f53495a
 let
 	fig = Figure()
-	ax  = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"y")
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"y")
 	x = range(-1.0, 1.0, length = 10^3 + 1) |> collect
 	x[(begin + end) ÷ 2] = NaN # to separate the lines
 	y = @. inv(x)
@@ -70,7 +69,7 @@ md"""
 # ╔═╡ 62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
 let
 	fig = Figure()
-	ax  = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
 	x = range(-xmax_sin_1_x, xmax_sin_1_x, length = 5 * 10^4)
 	y = @. sin(1 / x)
 	lines!(ax, x, y)
@@ -92,12 +91,21 @@ md"""
 # ╔═╡ a95d9594-cdd5-431c-9ea1-7d2e105b08e6
 let
 	fig = Figure()
-	ax  = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
 	x = range(-xmax_x_sin_1_x, xmax_x_sin_1_x, length = 5 * 10^4)
 	y = @. x * sin(1 / x)
 	lines!(ax, x, y)
 	fig
 end
+
+# ╔═╡ dc5710c9-44e2-4f3b-9abc-77821aa9eea0
+md"""
+## Fazit
+
+Insbesondere folgt aus diesen Beispielen, dass nur die Stetigkeit
+alleine nicht ausreicht, um eine Funktion numerisch gut approximieren
+zu können. Deshalb werden wir weitere Konzepte benötigen.
+"""
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
 md"""
@@ -1596,6 +1604,7 @@ version = "3.6.0+0"
 # ╟─7808c94f-3903-4b51-a927-4044fe0ed6e2
 # ╟─4ce73be2-0dcb-4f1a-bdb7-40741b7d9f79
 # ╠═a95d9594-cdd5-431c-9ea1-7d2e105b08e6
+# ╟─dc5710c9-44e2-4f3b-9abc-77821aa9eea0
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
