@@ -11,6 +11,11 @@ lecture notes, literature recommendations, and exercise sheets will
 be provided via Moodle. This repository contains additional material
 and numerical examples based on code.
 
+To work with the material interactively, you need to install Julia
+(see section below). Moreover, static preview versions of the examples
+can be accessed from the
+[website of this repo](https://ranocha.de/2024_MfI2b/).
+
 
 ## Installation
 
