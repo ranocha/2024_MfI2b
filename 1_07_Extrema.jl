@@ -83,6 +83,32 @@ let
 	fig
 end
 
+# ╔═╡ e13183b0-0f5a-4a15-b8be-3a5bcdcd871f
+md"""
+Ähnlich ist es bei
+
+$$f\colon [-1, 1] \to \mathbb{R}, \quad f(x) = \sqrt[3]{x}.$$
+"""
+
+# ╔═╡ 55ddd19d-3e0f-4a43-860f-87111f92d7da
+let
+	f(x) = cbrt(x)
+	
+	fig = Figure()
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
+	
+	x = range(-1.0, 1.0, length = 10^3)
+	y = f.(x)
+	lines!(ax, x, y; label = L"f")
+	
+	x_extrema = [-1.0, 1.0]
+	y_extrema = f.(x_extrema)
+	scatter!(ax, x_extrema, y_extrema; color = :gray, label = "Extrema")
+
+	axislegend(position = :rc)
+	fig
+end
+
 # ╔═╡ e52c3057-90d3-43ad-85b3-6b43125cd6e0
 md"""
 ## Stetige Funktion auf nicht-kompaktem Intervall
@@ -1686,6 +1712,8 @@ version = "3.6.0+0"
 # ╟─e87a25ae-0a95-4377-8ea6-520783b67ca1
 # ╟─a0cf1ab1-977f-4719-b57c-58243245252b
 # ╟─e2d7657a-b9bf-4aa3-a31b-e024cab782ed
+# ╟─e13183b0-0f5a-4a15-b8be-3a5bcdcd871f
+# ╟─55ddd19d-3e0f-4a43-860f-87111f92d7da
 # ╟─e52c3057-90d3-43ad-85b3-6b43125cd6e0
 # ╟─7cb23a6e-5aa7-42d2-9ce7-c315d69c2126
 # ╟─c6bda148-aa25-46aa-8788-235fec4c3150
