@@ -4,6 +4,16 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ f05a5972-58b1-4788-a0a8-24966d6714da
 begin
 	using PlutoUI
@@ -16,203 +26,94 @@ begin
 	set_theme!(theme_latexfonts(); 
 			   fontsize = 16,
 			   Lines = (linewidth = 2,),
-			   markersize = 16)
+			   markersize = 16,)
 end
 
 # ╔═╡ b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 using LaTeXStrings
 
+# ╔═╡ 2ad3bf49-6fcf-4e19-a56b-cbb6bdf9608e
+using Enzyme
+
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
-# 1.7 Extrema
+# 2.1 Ableitung
 """
 
-# ╔═╡ f4a09398-0247-4f1d-b1a9-9ba07f7373f6
+# ╔═╡ 5698d649-fa1f-472f-a334-eda4465fd117
 md"""
-## Stetige Funktion auf kompaktem Intervall: Extrema im Inneren
+## Polynome
 
-Wir betrachten die Funktion
+Um die Ableitung analytisch zu bestimmen rechnen wir etwa
 
-$$f\colon [0, 2] \to \mathbb{R}, \quad f(x) = \sin(2 \pi x).$$
+$$\lim_{h \to 0} \frac{(x + h)^2 - x^2}{h}
+= \lim_{h \to 0} \frac{(x^2 + 2 h x + h^2) - x^2}{h}
+= \lim_{h \to 0} \left( 2 x + h \right)
+= 2 x.$$
+
+Für höhere Potenzen $n \in \mathbb{N}$ können wir die allgemeine Binomialformel
+
+$$(x + y)^n = \sum_{k=0}^n \binom{n}{k} x^k y^{n-k}$$
+
+aus MfI 1 verwenden und erhalten
+
+$$\lim_{h \to 0} \frac{(x + h)^n - x^n}{h} = n x^{n-1}.$$
 """
 
-# ╔═╡ e87a25ae-0a95-4377-8ea6-520783b67ca1
+# ╔═╡ 3f539c54-639a-4c26-8933-1f9658516447
+md"""
+## Beispiele
+
+Hier betrachten wir einige Beispiele von Ableitungen differenzierbarer Funktionen
+und deren lokale Tangenten.
+"""
+
+# ╔═╡ 62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
+md"""
+``x_0`` = $(@bind x0 Slider(range(-2, 2, step = 0.1), default=1, show_value=true))
+
+``a`` = $(@bind a Slider(range(-2, 2, step = 0.1), default=-1, show_value=true))
+
+``b`` = $(@bind b Slider(range(-2, 2, step = 0.1), default=1, show_value=true))
+
+``c`` = $(@bind c Slider(range(-2, 2, step = 0.1), default=1, show_value=true))
+"""
+
+# ╔═╡ bac5e7df-e6cf-4445-b527-0eb42a9632a7
+@bind f_index Select([
+	1 => "f(x) = c",
+	2 => "f(x) = a x + b",
+	3 => "f(x) = a x^2 + b x + c",
+	4 => "f(x) = |x|^c",
+	5 => "f(x) = cbrt(x)",
+])
+
+# ╔═╡ 28883abe-617c-4261-9274-c55d080ccc91
 let
-	f(x) = sinpi(2 * x)
+	functions = [
+		Returns(c),
+		x -> a * x + b,
+		x -> a * x^2 + b * x + c,
+		x -> abs(x)^c,
+		cbrt,
+	]
+	f = functions[f_index]
 	
 	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"y")
+	x = range(-2, 2, length = 10^4)
 	
-	x = range(0.0, 2.0, length = 10^3)
 	y = f.(x)
 	lines!(ax, x, y; label = L"f")
+
+	(f′0,), f0 = autodiff(ForwardWithPrimal, f, Duplicated(x0, one(x0)))
+	scatter!(ax, [x0], [f0])
+	text!(ax, L"(x_0,\, f(x_0))", position=(x0, f0), space = :data)
+
+	y = @. f0 + f′0 * (x - x0)
+	lines!(ax, x, y; label = "Tangente", linestyle = :dash)
 	
-	x_extrema = [0.25, 0.75, 1.25, 1.75]
-	y_extrema = f.(x_extrema)
-	scatter!(ax, x_extrema, y_extrema; color = :gray, label = "Extrema")
-
-	axislegend()
-	fig
-end
-
-# ╔═╡ a0cf1ab1-977f-4719-b57c-58243245252b
-md"""
-## Stetige Funktion auf kompaktem Intervall: Extrema am Rand
-
-Wir betrachten die Funktion
-
-$$f\colon [0, 1] \to \mathbb{R}, \quad f(x) = \sqrt{x}.$$
-"""
-
-# ╔═╡ e2d7657a-b9bf-4aa3-a31b-e024cab782ed
-let
-	f(x) = sqrt(x)
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = range(0.0, 1.0, length = 10^3)
-	y = f.(x)
-	lines!(ax, x, y; label = L"f")
-	
-	x_extrema = [0.0, 1.0]
-	y_extrema = f.(x_extrema)
-	scatter!(ax, x_extrema, y_extrema; color = :gray, label = "Extrema")
-
-	axislegend(position = :rc)
-	fig
-end
-
-# ╔═╡ e13183b0-0f5a-4a15-b8be-3a5bcdcd871f
-md"""
-Ähnlich ist es bei
-
-$$f\colon [-1, 1] \to \mathbb{R}, \quad f(x) = \sqrt[3]{x}.$$
-"""
-
-# ╔═╡ 55ddd19d-3e0f-4a43-860f-87111f92d7da
-let
-	f(x) = cbrt(x)
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = range(-1.0, 1.0, length = 10^3)
-	y = f.(x)
-	lines!(ax, x, y; label = L"f")
-	
-	x_extrema = [-1.0, 1.0]
-	y_extrema = f.(x_extrema)
-	scatter!(ax, x_extrema, y_extrema; color = :gray, label = "Extrema")
-
-	axislegend(position = :rc)
-	fig
-end
-
-# ╔═╡ e52c3057-90d3-43ad-85b3-6b43125cd6e0
-md"""
-## Stetige Funktion auf nicht-kompaktem Intervall
-
-Wir betrachten die Funktion
-
-$$f\colon (0, 1) \to \mathbb{R}, \quad f(x) = \frac{1}{x}.$$
-
-Beachten Sie, dass auch das Minimum bei $x = 1$ nicht im offenen Intervall $(0, 1)$ liegt und $f$ deshablb weder ein Maximum noch ein Minimum annimmt.
-"""
-
-# ╔═╡ 7cb23a6e-5aa7-42d2-9ce7-c315d69c2126
-let
-	f(x) = inv(x)
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = range(0.0, 1.0, length = 10^3)
-	y = f.(x)
-	lines!(ax, x, y; label = L"f")
-	scatter!(ax, [1.0], [1.0]; color = :white,
-			 strokecolor = Makie.wong_colors()[1], strokewidth = 2)
-	ylims!(ax; low = 0, high = 10)
-	
-	fig
-end
-
-# ╔═╡ c6bda148-aa25-46aa-8788-235fec4c3150
-md"""
-Ähnlich ist es bei
-
-$$f\colon (1, \infty) \to \mathbb{R}, \quad f(x) = \frac{1}{x}.$$
-"""
-
-# ╔═╡ 15de7be2-1eb2-4c53-8b6d-193957fe18ec
-let
-	f(x) = inv(x)
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = 10.0 .^ range(0.0, 2.0, length = 10^3)
-	y = f.(x)
-	lines!(ax, x, y; label = L"f")
-	scatter!(ax, [1.0], [1.0]; color = :white,
-			 strokecolor = Makie.wong_colors()[1], strokewidth = 2)
-
-	fig
-end
-
-# ╔═╡ 3eba6e4a-9709-49d5-8ec7-96f3a7bc34ff
-md"""
-## Unstetige Funktion auf kompaktem Intervall
-
-Wir betrachten die Funktion
-
-$$f\colon [-1, 1] \to \mathbb{R}, \quad f(x) = \begin{cases} \frac{1}{x}, & x \ne 0, \\ 0, & x = 0.\end{cases}$$
-"""
-
-# ╔═╡ 1ac7d731-b280-429d-a8d5-18f15e65cc3b
-let
-	f(x) = inv(x)
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = range(-1.0, 1.0, length = 10^3 + 1)
-	y = f.(x)
-	lines!(ax, x, y; label = L"f")
-	scatter!(ax, [0.0], [0.0]; label = L"f")
-	ylims!(ax; low = -500, high = 500)
-
-	axislegend(position = :rc)
-	fig
-end
-
-# ╔═╡ fc8b9bed-5194-4521-9ece-a6a4d7cb6924
-md"""
-Auch die Funktion
-
-$$f\colon [-1, 1] \to \mathbb{R}, \quad f(x) = \begin{cases} x^2, & x \notin \{-1, 0, 1\}, \\ 1 - x^2, & \text{sonst},\end{cases}$$
-
-nimmt keine Extrema an.
-"""
-
-# ╔═╡ a7e8b420-319e-4189-ac96-680023ee2f0d
-let
-	f(x) = isinteger(x) ? 1 - x^2 : x^2
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"f(x)")
-	
-	x = range(-1.0, 1.0, length = 10^3 + 1)
-	y = f.(x)
-	y[begin] = y[(begin + end) ÷ 2] = y[end] = NaN
-	lines!(ax, x, y; label = L"f")
-	x_special = [-1.0, 0.0, 1.0]
-	y_special = f.(x_special)
-	scatter!(ax, x_special, y_special; label = L"f")
-	scatter!(ax, x_special, x_special.^2; color = :white,
-			 strokecolor = Makie.wong_colors()[1], strokewidth = 2)
-
-	axislegend(position = :rc)
+	axislegend(position = :lt)
 	fig
 end
 
@@ -247,11 +148,13 @@ _First, we will install (and compile) some packages. This can take a few minutes
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
-CairoMakie = "~0.12.9"
+CairoMakie = "~0.12.11"
+Enzyme = "~0.13.3"
 LaTeXStrings = "~1.3.1"
 PlutoUI = "~0.7.60"
 """
@@ -262,7 +165,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "289a5a453e7784db5d5154225f1973c747661f2a"
+project_hash = "a5e3b3d56c838b7f4611055d3e3dac5b6ea6ce1a"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -369,9 +272,9 @@ version = "1.1.0"
 
 [[deps.CairoMakie]]
 deps = ["CRC32c", "Cairo", "Cairo_jll", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
-git-tree-sha1 = "361dec06290d76b6d70d0c7dc888038eec9df63a"
+git-tree-sha1 = "4f827b38d3d9ffe6e3b01fbcf866c625fa259ca5"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-version = "0.12.9"
+version = "0.12.11"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -486,9 +389,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "e6c693a0e4394f8fda0e51a5bdf5aef26f8235e9"
+git-tree-sha1 = "d7477ecdafb813ddee2ae727afa94e9dcb5f3fb0"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.111"
+version = "0.25.112"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -522,6 +425,41 @@ git-tree-sha1 = "bdb1942cd4c45e3c678fd11569d5cccd80976237"
 uuid = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 version = "1.0.4"
 
+[[deps.Enzyme]]
+deps = ["CEnum", "EnzymeCore", "Enzyme_jll", "GPUCompiler", "LLVM", "Libdl", "LinearAlgebra", "ObjectFile", "Preferences", "Printf", "Random"]
+git-tree-sha1 = "35ff0eb8afbb319a9a38bd3a1cf0d3264655a9b8"
+uuid = "7da242da-08ed-463a-9acd-ee780be4f1d9"
+version = "0.13.3"
+
+    [deps.Enzyme.extensions]
+    EnzymeBFloat16sExt = "BFloat16s"
+    EnzymeChainRulesCoreExt = "ChainRulesCore"
+    EnzymeLogExpFunctionsExt = "LogExpFunctions"
+    EnzymeSpecialFunctionsExt = "SpecialFunctions"
+    EnzymeStaticArraysExt = "StaticArrays"
+
+    [deps.Enzyme.weakdeps]
+    BFloat16s = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"
+    ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+    LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
+    SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[[deps.EnzymeCore]]
+git-tree-sha1 = "2821c1873ab5f7dbfc30e4ba2a8e0f30c13c883a"
+uuid = "f151be2c-9106-41f4-ab19-57ee4f262869"
+version = "0.8.2"
+weakdeps = ["Adapt"]
+
+    [deps.EnzymeCore.extensions]
+    AdaptExt = "Adapt"
+
+[[deps.Enzyme_jll]]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "TOML"]
+git-tree-sha1 = "4f444c4c6ed28b8501a3749ac474098329a5310e"
+uuid = "7cc45869-7501-5eee-bdea-0790c847d4ef"
+version = "0.0.150+0"
+
 [[deps.ExactPredicates]]
 deps = ["IntervalArithmetic", "Random", "StaticArrays"]
 git-tree-sha1 = "b3f2ff58735b5f024c392fde763f29b057e4b025"
@@ -533,6 +471,11 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "1c6317308b9dc757616f0b5cb379db10494443a7"
 uuid = "2e619515-83b5-522b-bb60-26c02a35a201"
 version = "2.6.2+0"
+
+[[deps.ExprTools]]
+git-tree-sha1 = "27415f162e6028e81c72b82ef756bf321213b6ec"
+uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
+version = "0.1.10"
 
 [[deps.Extents]]
 git-tree-sha1 = "81023caa0021a41712685887db1fc03db26f41f5"
@@ -553,9 +496,9 @@ version = "1.8.0"
 
 [[deps.FFTW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
+git-tree-sha1 = "4d81ed14783ec49ce9f2e168208a12ce1815aa25"
 uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
-version = "3.3.10+0"
+version = "3.3.10+1"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
@@ -636,6 +579,12 @@ git-tree-sha1 = "1ed150b39aebcc805c26b93a8d0122c940f64ce2"
 uuid = "559328eb-81f9-559d-9380-de523a88c83c"
 version = "1.0.14+0"
 
+[[deps.GPUCompiler]]
+deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "PrecompileTools", "Preferences", "Scratch", "Serialization", "TOML", "TimerOutputs", "UUIDs"]
+git-tree-sha1 = "1d6f290a5eb1201cd63574fbc4440c788d5cb38f"
+uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
+version = "0.27.8"
+
 [[deps.GeoFormatTypes]]
 git-tree-sha1 = "59107c179a586f0fe667024c5eb7033e81333271"
 uuid = "68eda718-8dee-11e9-39e7-89f7f65f511f"
@@ -643,9 +592,9 @@ version = "0.4.2"
 
 [[deps.GeoInterface]]
 deps = ["Extents", "GeoFormatTypes"]
-git-tree-sha1 = "5921fc0704e40c024571eca551800c699f86ceb4"
+git-tree-sha1 = "2f6fce56cdb8373637a6614e14a5768a88450de2"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-version = "1.3.6"
+version = "1.3.7"
 
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "Extents", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
@@ -860,9 +809,9 @@ version = "0.1.5"
 
 [[deps.JpegTurbo_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "c84a835e1a09b289ffcd2271bf2a337bbdda6637"
+git-tree-sha1 = "25ee0be4d43d0269027024d75a24c24d6c6e590c"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
-version = "3.0.3+0"
+version = "3.0.4+0"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -876,6 +825,24 @@ git-tree-sha1 = "170b660facf5df5de098d866564877e119141cbd"
 uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
 version = "3.100.2+0"
 
+[[deps.LLVM]]
+deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Preferences", "Printf", "Requires", "Unicode"]
+git-tree-sha1 = "4ad43cb0a4bb5e5b1506e1d1f48646d7e0c80363"
+uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
+version = "9.1.2"
+
+    [deps.LLVM.extensions]
+    BFloat16sExt = "BFloat16s"
+
+    [deps.LLVM.weakdeps]
+    BFloat16s = "ab4f0b2a-ad5b-11e8-123f-65d77653426b"
+
+[[deps.LLVMExtra_jll]]
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "TOML"]
+git-tree-sha1 = "05a8bd5a42309a9ec82f700876903abce1017dd3"
+uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
+version = "0.0.34+0"
+
 [[deps.LLVMOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "78211fb6cbc872f77cad3fc0b6cf647d923f4929"
@@ -884,9 +851,9 @@ version = "18.1.7+0"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "70c5da094887fd2cae843b8db33920bac4b6f07d"
+git-tree-sha1 = "854a9c268c43b77b0a27f22d7fab8d33cdb3a731"
 uuid = "dd4b983a-f0e5-5f8d-a1b7-129d4a5fb1ac"
-version = "2.10.2+0"
+version = "2.10.2+1"
 
 [[deps.LaTeXStrings]]
 git-tree-sha1 = "50901ebc375ed41dbf8058da26f9de442febbbec"
@@ -1006,16 +973,16 @@ uuid = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 version = "0.5.13"
 
 [[deps.Makie]]
-deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Dates", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Format", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageIO", "InteractiveUtils", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Scratch", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun", "Unitful"]
-git-tree-sha1 = "204f06860af9008fa08b3a4842f48116e1209a2c"
+deps = ["Animations", "Base64", "CRC32c", "ColorBrewer", "ColorSchemes", "ColorTypes", "Colors", "Contour", "Dates", "DelaunayTriangulation", "Distributions", "DocStringExtensions", "Downloads", "FFMPEG_jll", "FileIO", "FilePaths", "FixedPointNumbers", "Format", "FreeType", "FreeTypeAbstraction", "GeometryBasics", "GridLayoutBase", "ImageBase", "ImageIO", "InteractiveUtils", "Interpolations", "IntervalSets", "Isoband", "KernelDensity", "LaTeXStrings", "LinearAlgebra", "MacroTools", "MakieCore", "Markdown", "MathTeXEngine", "Observables", "OffsetArrays", "Packing", "PlotUtils", "PolygonOps", "PrecompileTools", "Printf", "REPL", "Random", "RelocatableFolders", "Scratch", "ShaderAbstractions", "Showoff", "SignedDistanceFields", "SparseArrays", "Statistics", "StatsBase", "StatsFuns", "StructArrays", "TriplotBase", "UnicodeFun", "Unitful"]
+git-tree-sha1 = "2281aaf0685e5e8a559982d32f17d617a949b9cd"
 uuid = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-version = "0.21.9"
+version = "0.21.11"
 
 [[deps.MakieCore]]
 deps = ["ColorTypes", "GeometryBasics", "IntervalSets", "Observables"]
-git-tree-sha1 = "b0e2e3473af351011e598f9219afb521121edd2b"
+git-tree-sha1 = "22fed09860ca73537a36d4e5a9bce0d9e80ee8a8"
 uuid = "20f20a25-4f0e-4fdf-b5d1-57303727442b"
-version = "0.8.6"
+version = "0.8.8"
 
 [[deps.MappedArrays]]
 git-tree-sha1 = "2dab0221fe2b0f2cb6754eaa743cc266339f527e"
@@ -1072,6 +1039,12 @@ version = "1.1.1"
 uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 version = "1.2.0"
 
+[[deps.ObjectFile]]
+deps = ["Reexport", "StructIO"]
+git-tree-sha1 = "7249afa1c4dfd86bfbcc9b28939ab6ef844f4e11"
+uuid = "d8793406-e978-5875-9003-1fc021f44a92"
+version = "0.4.2"
+
 [[deps.Observables]]
 git-tree-sha1 = "7438a59546cf62428fc9d1bc94729146d37a7225"
 uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
@@ -1116,9 +1089,9 @@ version = "0.8.1+2"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "1b35263570443fdd9e76c76b7062116e2f374ab8"
+git-tree-sha1 = "7493f61f55a6cce7325f197443aa80d32554ba10"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.0.15+0"
+version = "3.0.15+1"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pkg"]
@@ -1247,15 +1220,13 @@ version = "1.0.0"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "1d587203cf851a51bf1ea31ad7ff89eff8d625ea"
+git-tree-sha1 = "cda3b045cf9ef07a08ad46731f5a3165e56cf3da"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.11.0"
+version = "2.11.1"
+weakdeps = ["Enzyme"]
 
     [deps.QuadGK.extensions]
     QuadGKEnzymeExt = "Enzyme"
-
-    [deps.QuadGK.weakdeps]
-    Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1320,9 +1291,9 @@ version = "0.7.0"
 
 [[deps.SIMD]]
 deps = ["PrecompileTools"]
-git-tree-sha1 = "2803cab51702db743f3fda07dd1745aadfbf43bd"
+git-tree-sha1 = "98ca7c29edd6fc79cd74c61accb7010a4e7aee33"
 uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
-version = "3.5.0"
+version = "3.6.0"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1462,6 +1433,11 @@ version = "0.6.18"
     SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
     StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
+[[deps.StructIO]]
+git-tree-sha1 = "c581be48ae1cbf83e899b14c07a807e1787512cc"
+uuid = "53d494c1-5632-5724-8f4c-31dff12d585f"
+version = "0.3.1"
+
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
 uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
@@ -1508,6 +1484,12 @@ deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedP
 git-tree-sha1 = "bc7fd5c91041f44636b2c134041f7e5263ce58ae"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
 version = "0.10.0"
+
+[[deps.TimerOutputs]]
+deps = ["ExprTools", "Printf"]
+git-tree-sha1 = "5a13ae8a41237cff5ecf34f73eb1b8f42fff6531"
+uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
+version = "0.5.24"
 
 [[deps.TranscodingStreams]]
 git-tree-sha1 = "e84b3a11b9bece70d14cce63406bbc79ed3464d2"
@@ -1705,20 +1687,11 @@ version = "3.6.0+0"
 
 # ╔═╡ Cell order:
 # ╟─e6c64c80-773b-11ef-2379-bf6609137e69
-# ╟─f4a09398-0247-4f1d-b1a9-9ba07f7373f6
-# ╟─e87a25ae-0a95-4377-8ea6-520783b67ca1
-# ╟─a0cf1ab1-977f-4719-b57c-58243245252b
-# ╟─e2d7657a-b9bf-4aa3-a31b-e024cab782ed
-# ╟─e13183b0-0f5a-4a15-b8be-3a5bcdcd871f
-# ╟─55ddd19d-3e0f-4a43-860f-87111f92d7da
-# ╟─e52c3057-90d3-43ad-85b3-6b43125cd6e0
-# ╟─7cb23a6e-5aa7-42d2-9ce7-c315d69c2126
-# ╟─c6bda148-aa25-46aa-8788-235fec4c3150
-# ╟─15de7be2-1eb2-4c53-8b6d-193957fe18ec
-# ╟─3eba6e4a-9709-49d5-8ec7-96f3a7bc34ff
-# ╟─1ac7d731-b280-429d-a8d5-18f15e65cc3b
-# ╟─fc8b9bed-5194-4521-9ece-a6a4d7cb6924
-# ╟─a7e8b420-319e-4189-ac96-680023ee2f0d
+# ╟─5698d649-fa1f-472f-a334-eda4465fd117
+# ╟─3f539c54-639a-4c26-8933-1f9658516447
+# ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
+# ╟─bac5e7df-e6cf-4445-b527-0eb42a9632a7
+# ╟─28883abe-617c-4261-9274-c55d080ccc91
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
@@ -1728,5 +1701,6 @@ version = "3.6.0+0"
 # ╠═f05a5972-58b1-4788-a0a8-24966d6714da
 # ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
+# ╠═2ad3bf49-6fcf-4e19-a56b-cbb6bdf9608e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
