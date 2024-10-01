@@ -41,6 +41,9 @@ using SciMLBase
 # ╔═╡ 6d6ab564-2c36-4c1b-9fe4-e673f8fa3e70
 using SimpleNonlinearSolve
 
+# ╔═╡ 23f6aba7-6e85-4346-934f-fb21b9590d0f
+using DoubleFloats
+
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
 # 2.2 Extrema differenzierbarer Funktionen
@@ -64,7 +67,7 @@ md"""
 # ╔═╡ e053359f-032c-4354-945a-fac4057ff55e
 @bind f Select([
 	(x -> x^2 + 2 * x + 1) => "f(x) = x^2 + 2 x + 1",
-	(x -> sin(π * x / 2)) => "f(x) = sin(π x)",
+	(x -> sin(π * x / 2)) => "f(x) = sin(π x / 2)",
 ])
 
 # ╔═╡ 28883abe-617c-4261-9274-c55d080ccc91
@@ -115,6 +118,84 @@ let
 	fig
 end
 
+# ╔═╡ f387a540-4426-41a0-b6ae-d0eadf22086d
+md"""
+## Numerische Differentiation
+
+Wir betrachten den Fehler der Vorwärtsdifferenzen
+
+$$\frac{f(x + h) - f(x)}{h} \approx f'(x)$$
+
+für verschiedene Funktionen $f$ an der Stelle $x = 1$. Dazu verwenden wir
+verschiedene Typen von Fließkommazahlen und berechnen den Fehler der
+numerischen Approximation der Ableitung.
+"""
+
+# ╔═╡ d9c8994e-16d9-45d0-ab71-8e73618d7da1
+@bind f_diff Select([
+	sin => "f(x) = sin(x)",
+	cos => "f(x) = cos(x)",
+	exp => "f(x) = exp(x)",
+	(x -> sin(100 * x)) => "f(x) = sin(100 x)",
+	(x -> sin(x / 100)) => "f(x) = sin(x / 100)",
+])
+
+# ╔═╡ 30769c50-2d77-4996-aa74-54831f5054f8
+@bind FloatType Select([Float32, Float64, Double64]; default = Float64)
+
+# ╔═╡ 68a92ddc-5bee-4348-a600-e1e284ae10e7
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1]; 
+			  xlabel = L"Schrittweite $h$", 
+			  ylabel = "Fehler der einseitigen Differenzen",
+			  xscale = log10, yscale = log10)
+	
+	f = f_diff
+	x = one(FloatType)
+	(f′x,) = autodiff(Forward, f, Duplicated(Float64(x), 1.0))
+	h = FloatType.(10.0 .^ range(-20, 0, length = 500))
+	fd_error(h) = max(abs((f(x + h) - f(x)) / h - f′x), eps(x) / 100)
+	lines!(ax, h, fd_error.(h); label = "")
+	
+	h_def = sqrt(eps(x))
+	scatter!(ax, [h_def], [fd_error(h_def)]; color = :gray)
+	text!(ax, "sqrt(eps(x))"; position=(5 * h_def, fd_error(h_def)), space = :data)
+	
+	fig
+end
+
+# ╔═╡ bf5ae14f-375b-4a79-bcdc-abaa7d795e63
+md"""
+Als nächstes verwenden wir zentrale Differenzen
+
+$$\frac{f(x + h) - f(x - h)}{2 h} \approx f'(x)$$
+
+statt der einseitigen Differenzen.
+"""
+
+# ╔═╡ ebacf364-4228-4776-a227-54a052a28f7f
+let
+	fig = Figure()
+	ax = Axis(fig[1, 1]; 
+			  xlabel = L"Schrittweite $h$", 
+			  ylabel = "Fehler der zentralen Differenzen",
+			  xscale = log10, yscale = log10)
+	
+	f = f_diff
+	x = one(FloatType)
+	(f′x,) = autodiff(Forward, f, Duplicated(Float64(x), 1.0))
+	h = FloatType.(10.0 .^ range(-20, 0, length = 500))
+	fd_error(h) = max(abs((f(x + h) - f(x - h)) / (2 * h) - f′x), eps(x) / 100)
+	lines!(ax, h, fd_error.(h); label = "")
+	
+	h_def = cbrt(eps(x))
+	scatter!(ax, [h_def], [fd_error(h_def)]; color = :gray)
+	text!(ax, "cbrt(eps(x))"; position=(5 * h_def, fd_error(h_def)), space = :data)
+	
+	fig
+end
+
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
 md"""
 # Appendix
@@ -146,6 +227,7 @@ _First, we will install (and compile) some packages. This can take a few minutes
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DoubleFloats = "497a8b3b-efae-58df-a0af-a86822472b78"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
@@ -154,6 +236,7 @@ SimpleNonlinearSolve = "727e6d20-b764-4bd8-a329-72de5adea6c7"
 
 [compat]
 CairoMakie = "~0.11.10"
+DoubleFloats = "~1.4.0"
 Enzyme = "~0.12.23"
 LaTeXStrings = "~1.3.1"
 PlutoUI = "~0.7.60"
@@ -167,7 +250,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "6607a9ab6b831662e8dfb958d4a692d664653eb0"
+project_hash = "4d165ca7f5642cd0fc36dbaad0a1e39fa5aa2789"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "5a5eafb8344b81b8c2237f8a6f6b3602b3f6180e"
@@ -617,6 +700,12 @@ git-tree-sha1 = "2fb1e02f2b635d0845df5d7c167fec4dd739b00d"
 uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.9.3"
 
+[[deps.DoubleFloats]]
+deps = ["GenericLinearAlgebra", "LinearAlgebra", "Polynomials", "Printf", "Quadmath", "Random", "Requires", "SpecialFunctions"]
+git-tree-sha1 = "98d485da59c3f9d511429bdcb41b0762bf6ee1d5"
+uuid = "497a8b3b-efae-58df-a0af-a86822472b78"
+version = "1.4.0"
+
 [[deps.Downloads]]
 deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
@@ -849,6 +938,12 @@ deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "Preference
 git-tree-sha1 = "ab29216184312f99ff957b32cd63c2fe9c928b91"
 uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
 version = "0.26.7"
+
+[[deps.GenericLinearAlgebra]]
+deps = ["LinearAlgebra", "Printf", "Random", "libblastrampoline_jll"]
+git-tree-sha1 = "02be7066f936af6b04669f7c370a31af9036c440"
+uuid = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
+version = "0.3.11"
 
 [[deps.GeoFormatTypes]]
 git-tree-sha1 = "59107c179a586f0fe667024c5eb7033e81333271"
@@ -1654,6 +1749,12 @@ weakdeps = ["Enzyme"]
     [deps.QuadGK.extensions]
     QuadGKEnzymeExt = "Enzyme"
 
+[[deps.Quadmath]]
+deps = ["Compat", "Printf", "Random", "Requires"]
+git-tree-sha1 = "67fe599f02c3f7be5d97310674cd05429d6f1b42"
+uuid = "be4d8f0f-7fa4-5f49-b795-2f01399ab2dd"
+version = "0.5.10"
+
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -2285,7 +2386,13 @@ version = "3.6.0+0"
 # ╟─9b0a1cd5-bbf3-4202-8521-5769cd1bcd50
 # ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
 # ╟─e053359f-032c-4354-945a-fac4057ff55e
-# ╟─28883abe-617c-4261-9274-c55d080ccc91
+# ╠═28883abe-617c-4261-9274-c55d080ccc91
+# ╟─f387a540-4426-41a0-b6ae-d0eadf22086d
+# ╟─d9c8994e-16d9-45d0-ab71-8e73618d7da1
+# ╟─30769c50-2d77-4996-aa74-54831f5054f8
+# ╟─68a92ddc-5bee-4348-a600-e1e284ae10e7
+# ╟─bf5ae14f-375b-4a79-bcdc-abaa7d795e63
+# ╟─ebacf364-4228-4776-a227-54a052a28f7f
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
@@ -2298,5 +2405,6 @@ version = "3.6.0+0"
 # ╠═84ee17f4-1618-4290-9f9b-bb5f60cd791e
 # ╠═21dd28ce-7815-463f-a58e-03b98c4cac5b
 # ╠═6d6ab564-2c36-4c1b-9fe4-e673f8fa3e70
+# ╠═23f6aba7-6e85-4346-934f-fb21b9590d0f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
