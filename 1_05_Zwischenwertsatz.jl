@@ -85,8 +85,6 @@ md"""
 # ╔═╡ 4b7df0c1-3b96-4b45-b793-13da1c087968
 md"""
 ``x`` = $(@bind x Slider(range(parse(T, "0.01"), 10, step = parse(T, "0.01")), default=2, show_value=true))
-
-mit ``\sqrt{x} \approx`` $(sqrt(x))
 """
 
 # ╔═╡ 3dd39638-f3c8-4306-8d6c-7ce15c0efa6e
@@ -100,6 +98,9 @@ let
 	scatter!(sqrt(x), zero(x); marker = :cross)
 	fig
 end
+
+# ╔═╡ 20dd20c0-853a-4844-bf87-ac476c95dd92
+md"mit ``\sqrt{x} \approx`` $(sqrt(x))"
 
 # ╔═╡ 9de27a7b-1cb5-463b-acaa-4ced69419f71
 let x = x
@@ -1702,6 +1703,7 @@ version = "3.6.0+0"
 # ╟─3dd39638-f3c8-4306-8d6c-7ce15c0efa6e
 # ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
 # ╟─4b7df0c1-3b96-4b45-b793-13da1c087968
+# ╟─20dd20c0-853a-4844-bf87-ac476c95dd92
 # ╟─9de27a7b-1cb5-463b-acaa-4ced69419f71
 # ╟─9907266d-12e0-47ab-a2ee-9da6c7e1b116
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
