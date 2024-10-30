@@ -43,11 +43,11 @@ using QuadGK
 
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
-# 4.6 Legendre-Polynome
+# 4.7 Fourier-Reihen
 
 Wir betrachten Approximationen von Funktionen 
 
-$$f\colon [-1, 1] \to \mathbb{R}$$
+$$f\colon [-\pi, \pi] \to \mathbb{R}$$
 
 durch Reihen-Entwicklungen und vergleichen die Taylor-Entwicklung
 
@@ -55,48 +55,16 @@ $$T_n(x; x_0) = \sum_{k=0}^n \frac{f^{(k)}(x_0)}{k!} (x - x_0)^k$$
 
 mit der Best-Approximation
 
-$$L_n(x) = \sum_{k=0}^n \frac{\langle P_k, f \rangle}{\|P_k\|_{L^2(-1,1)}^2} P_k(x),$$
+$$\begin{aligned}
+  F_n(x) &= \frac{1}{2} a_0 + \sum_{k=1}^n \left( a_k \cos(k x) + b_k \sin(k x) \right),
+  \\
+  a_k &= \frac{1}{\pi} \int_{-\pi}^\pi f(x) \cos(k x) \mathrm{d} x,
+  \\
+  b_k &= \frac{1}{\pi} \int_{-\pi}^\pi f(x) \sin(k x) \mathrm{d} x,
+\end{aligned}$$
 
-im quadratischen Mittel durch
-[Legendre-Polynome](https://de.wikipedia.org/wiki/Legendre-Polynom) $P_k$,
-wobei 
-
-$$\langle f, g \rangle = \int_{-1}^1 \overline{f(x)} g(x) \mathrm{d} x$$
-
-das $L^2$-Skalarprodukt ist.
+im quadratischen Mittel durch Fourier-Polynome.
 """
-
-# ╔═╡ b3f30a55-b18b-4fe8-8b59-82d0112bce22
-md"""
-## Legendre-Polynome
-
-Zuerst visualisieren wir die ersten Legendre-Polynome $P_k$.
-"""
-
-# ╔═╡ d66b89dc-5cb1-462a-a214-d3fe35ab53a7
-with_theme(
-    merge(
-		theme(nothing), # current default theme
-		Theme(
-        	Lines = (cycle = Cycle([:color, :linestyle], covary = true),)
-    	)
-	)) do
-	
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x")
-
-	x = range(-1.0, 1.0, step = 1.0e-3)
-
-	for n in 0:4
-		y = @. legendre(x, n)
-		lines!(ax, x, y; label = latexstring("P_", n))
-	end
-	
-	ylims!(ax, -1.1, 1.1)
-	# axislegend(position = :lt)
-	fig[1, 2] = Legend(fig, ax, framevisible = false)
-	fig
-end
 
 # ╔═╡ d480e309-f5e9-42a2-9502-a182e82b0657
 md"""
@@ -104,7 +72,7 @@ md"""
 
 Wir betrachten die Funktion
 
-$$f\colon [-1, 1] \to \mathbb{R}, \qquad f(x) = \mathrm{e}^{\sin(\pi x)},$$
+$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \mathrm{e}^{\sin(x)},$$
 
 und verwenden $x_0 = 0$ für die Taylor-Entwicklung.
 """
@@ -117,8 +85,8 @@ md"""
 # ╔═╡ 1cd29a4f-3abe-42c1-8354-17e07babf356
 md"""
 Hier können wir mehrere typische Verhalten erkennen:
-- Die Legendre-Approximation ist im gesamten Intervall gut während die Taylor-Approximation vor allem nahe des Entwicklungspunktes gut ist.
-- Dicht beim Entwicklungspunkt ist die Taylor-Approximation besser als die Legendre-Approximation, weiter davon entfernt ist es genau anders - mit zum Teil großen Fehlern der Taylor-Approximation am Rand des Intervalls.
+- Die Fourier-Approximation ist im gesamten Intervall gut während die Taylor-Approximation vor allem nahe des Entwicklungspunktes gut ist.
+- Dicht beim Entwicklungspunkt ist die Taylor-Approximation besser als die Fourier-Approximation, weiter davon entfernt ist es genau anders - mit zum Teil großen Fehlern der Taylor-Approximation am Rand des Intervalls.
 - Beide Approximationen scheinen gegen die Funktion $f$ zu konvergieren.
 """
 
@@ -128,8 +96,8 @@ md"""
 
 Wir betrachten die Funktion
 
-$$f\colon [-1, 1] \to \mathbb{R}, \qquad f(x) = \begin{cases}
-	\cos(\pi x), & -\frac{1}{2} \le x \le \frac{1}{2}, \\
+$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \begin{cases}
+	\cos(x), & -\frac{\pi}{2} \le x \le \frac{\pi}{2}, \\
 	0, & \text{sonst},
 \end{cases}$$
 
@@ -145,7 +113,7 @@ md"""
 md"""
 Auch hier können wir mehrere typische Verhalten erkennen:
 - Die Taylor-Approximation kann nur den "inneren Teil" gut approximieren.
-- Die Legendre-Approximation konvergiert deutlich langsamer als bei der glatten Funktion vorher.
+- Die Fourier-Approximation konvergiert deutlich langsamer als bei der glatten Funktion vorher.
 """
 
 # ╔═╡ 114dfa5d-f10c-45f4-9794-3671294e2d12
@@ -154,7 +122,7 @@ md"""
 
 Wir betrachten die Funktion
 
-$$f\colon [-1, 1] \to \mathbb{R}, \qquad f(x) = \begin{cases}
+$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \begin{cases}
 	-1, & x < 0, \\
 	0, & x = 0, \\
 	1, & x > 0.
@@ -175,7 +143,7 @@ Hier können wir ebenfalls einige typische Verhaltensweisen beobachten:
 - Nahe der Unstetigkeitsstelle gibt es immer Über- und Unter-Schwingungen, deren Amplitude nicht abnimmt. Dies ist als [Gibbs'sches Phänomen](https://de.wikipedia.org/wiki/Gibbssches_Phänomen) bekannt.
 - Trotzdem wird die Approximation im quadratischen Mittel besser - man kann zeigen, dass
 
-$$\| f - L_n\|_{L^2(-1,1)} \to 0, \quad n \to \infty.$$
+$$\| f - F_n\|_{L^2(-\pi,\pi)} \to 0, \quad n \to \infty.$$
 """
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
@@ -207,55 +175,59 @@ _First, we will install (and compile) some packages. This can take a few minutes
 
 # ╔═╡ 16a17b2d-dae9-43ad-9335-cdd5b7bee3d9
 function inner_product(f, g)
-	res, err = quadgk(-1.0, 1.0) do x
+	res, err = quadgk(-π, π) do x
 		return conj(f(x)) * g(x)
 	end
 	return res
 end
 
 # ╔═╡ 0172626c-0c9c-4390-a7bb-e7912130b6ce
-function legendre_coefficients(f, n)
-	c = zeros(n + 1)
-	for k in 0:n
-		p_k = x -> legendre(x, k)
-		c[k + 1] = inner_product(p_k, f) / inner_product(p_k, p_k)
+function fourier_coefficients(f, n)
+	a0 = inner_product(one, f) / π
+	a = zeros(n)
+	b = zeros(n)
+	for k in 1:n
+		a[k] = inner_product(x -> cos(k * x), f) / π
+		b[k] = inner_product(x -> sin(k * x), f) / π
 	end
-	return c
+	return a0, a, b
 end
 
 # ╔═╡ b4902a1f-68c9-423f-a062-627f7b1df2ec
-function evaluate_legendre_coefficients(x::Number, c)
-	res = 0.0
-	n = length(c) - 1
-	for k in 0:n
-		res += c[k + 1] * legendre(x, k)
+function evaluate_fourier_coefficients(x::Number, c)
+	a0, a, b = c
+	n = length(a)
+	res = a0 / 2
+	for k in 1:n
+		si, co = sincos(k * x)
+		res += a[k] * co + b[k] * si
 	end
 	return res
 end
 
 # ╔═╡ 7fbfa3ad-6a2f-4d5c-9045-00cf3abd5ce1
-function evaluate_legendre_coefficients(x::AbstractVector, c)
+function evaluate_fourier_coefficients(x::AbstractVector, c)
 	map(x) do x
-		evaluate_legendre_coefficients(x, c)
+		evaluate_fourier_coefficients(x, c)
 	end
 end
 
 # ╔═╡ 28883abe-617c-4261-9274-c55d080ccc91
-let f = x -> exp(sin(pi * x)), n = n_expsinpi, x0 = 0.0
+let f = x -> exp(sin(x)), n = n_expsinpi, x0 = 0.0
 	fig = Figure()
 	ax = Axis(fig[1, 1]; xlabel = L"x")
 
-	x = range(-1.0, 1.0, step = 1.0e-2)
+	x = range(-π, π, step = 1.0e-2)
 	f_x = @. f(x)
-	lines!(ax, x, f_x; label = L"\exp(\sin(\pi x))", color = :gray)
+	lines!(ax, x, f_x; label = L"\exp(\sin(x))", color = :gray)
 
 	taylor = f(Taylor1(n) + x0)
 	taylor_x = @. taylor(x - x0)
 	lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
 
-	legendre_c = legendre_coefficients(f, n)
-	legendre_x = evaluate_legendre_coefficients(x, legendre_c)
-	lines!(ax, x, legendre_x; label = L"L_n(x)", linestyle = :dot)
+	fourier_c = fourier_coefficients(f, n)
+	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
+	lines!(ax, x, fourier_x; label = L"F_n(x)", linestyle = :dot)
 
 	ylims!(ax, 0.1, 2.9)
 	axislegend(position = :lt)
@@ -267,8 +239,8 @@ let f = x -> exp(sin(pi * x)), n = n_expsinpi, x0 = 0.0
 	max_error = @. abs(f_x - taylor_x) + eps()
 	lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
 	
-	max_error = @. abs(f_x - legendre_x) + eps()
-	lines!(ax_error, x, max_error; label = L"L_n(x)", linestyle = :dot)
+	max_error = @. abs(f_x - fourier_x) + eps()
+	lines!(ax_error, x, max_error; label = L"F_n(x)", linestyle = :dot)
 	
 	axislegend(position = :lc)
 
@@ -276,11 +248,11 @@ let f = x -> exp(sin(pi * x)), n = n_expsinpi, x0 = 0.0
 end
 
 # ╔═╡ 86e05582-ae2a-4f63-b391-003cf7d805c4
-let f = x -> ifelse(-0.5 <= x <= 0.5, cos(pi * x), 0.0), n = n_cos0, x0 = 0.0
+let f = x -> ifelse(-0.5 * π <= x <= 0.5 * π, cos(x), 0.0), n = n_cos0, x0 = 0.0
 	fig = Figure()
 	ax = Axis(fig[1, 1]; xlabel = L"x")
 
-	x = range(-1.0, 1.0, step = 1.0e-2)
+	x = range(-π, π, step = 1.0e-2)
 	f_x = @. f(x)
 	lines!(ax, x, f_x; label = L"f(x)", color = :gray)
 
@@ -288,9 +260,9 @@ let f = x -> ifelse(-0.5 <= x <= 0.5, cos(pi * x), 0.0), n = n_cos0, x0 = 0.0
 	taylor_x = @. taylor(x - x0)
 	lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
 
-	legendre_c = legendre_coefficients(f, n)
-	legendre_x = evaluate_legendre_coefficients(x, legendre_c)
-	lines!(ax, x, legendre_x; label = L"L_n(x)", linestyle = :dot)
+	fourier_c = fourier_coefficients(f, n)
+	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
+	lines!(ax, x, fourier_x; label = L"F_n(x)", linestyle = :dot)
 
 	ylims!(ax, -0.1, 1.1)
 	axislegend(position = :lt)
@@ -302,8 +274,8 @@ let f = x -> ifelse(-0.5 <= x <= 0.5, cos(pi * x), 0.0), n = n_cos0, x0 = 0.0
 	max_error = @. abs(f_x - taylor_x) + eps()
 	lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
 	
-	max_error = @. abs(f_x - legendre_x) + eps()
-	lines!(ax_error, x, max_error; label = L"L_n(x)", linestyle = :dot)
+	max_error = @. abs(f_x - fourier_x) + eps()
+	lines!(ax_error, x, max_error; label = L"F_n(x)", linestyle = :dot)
 	
 	axislegend(position = :lc)
 
@@ -315,7 +287,7 @@ let f = sign, n = n_sign
 	fig = Figure()
 	ax = Axis(fig[1, 1]; xlabel = L"x")
 
-	x = range(-1.0, 1.0, step = 1.0e-2)
+	x = range(-π, π, length = 1 + 10^3)
 	f_x = @. f(x)
 	idx = findfirst(iszero, x)
 	f_x[idx] = NaN
@@ -326,9 +298,9 @@ let f = sign, n = n_sign
 	# taylor_x = @. taylor(x - x0)
 	# lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
 
-	legendre_c = legendre_coefficients(f, n)
-	legendre_x = evaluate_legendre_coefficients(x, legendre_c)
-	lines!(ax, x, legendre_x; label = L"L_n(x)", linestyle = :dot,
+	fourier_c = fourier_coefficients(f, n)
+	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
+	lines!(ax, x, fourier_x; label = L"L_n(x)", linestyle = :dot,
 		   color = Makie.wong_colors()[2])
 
 	ylims!(ax, -1.3, 1.3)
@@ -341,7 +313,7 @@ let f = sign, n = n_sign
 	# max_error = @. abs(f_x - taylor_x) + eps()
 	# lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
 	
-	max_error = @. abs(f_x - legendre_x) + eps()
+	max_error = @. abs(f_x - fourier_x) + eps()
 	lines!(ax_error, x, max_error; label = L"L_n(x)", linestyle = :dot,
 		   color = Makie.wong_colors()[2])
 	
@@ -1883,8 +1855,6 @@ version = "3.6.0+0"
 
 # ╔═╡ Cell order:
 # ╟─e6c64c80-773b-11ef-2379-bf6609137e69
-# ╟─b3f30a55-b18b-4fe8-8b59-82d0112bce22
-# ╟─d66b89dc-5cb1-462a-a214-d3fe35ab53a7
 # ╟─d480e309-f5e9-42a2-9502-a182e82b0657
 # ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
 # ╟─28883abe-617c-4261-9274-c55d080ccc91
