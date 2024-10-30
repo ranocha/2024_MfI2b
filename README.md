@@ -25,7 +25,7 @@ you need to download and install Julia. Please follow the links and
 instructions on the official website
 https://julialang.org/downloads/
 of the Julia programming language. The material for this course
-is written for Julia v1.10.5.
+is written for Julia v1.10 (v1.10.5 and newer).
 
 The examples are provided in form of
 [Pluto.jl](https://github.com/fonsp/Pluto.jl)
