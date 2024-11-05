@@ -97,9 +97,9 @@ ist das Newton-Verfahren
 
 $$x_{n+1} = x_{n} - f''(x_n)^{-1} f'(x_n)$$
 
-ein Spezielfall des Gradientenverfahrens. Hier betrachten wir speziell den Fall
+ein Spezialfall des Gradientenverfahrens. Hier betrachten wir speziell den Fall
 
-$$f(x) = \exp(\sin(\pi x) + x^2.$$
+$$f(x) = \exp\bigl(\sin(\pi x)\bigr) + x^2.$$
 """
 
 # ╔═╡ 0c354871-a560-4af2-8816-836e9fb8b37a
@@ -107,7 +107,7 @@ f3(x) = exp(sinpi(x)) + x^2
 
 # ╔═╡ 954bcb46-e2c2-44b2-8034-57e5edb0d6f8
 md"""
-`maxiter_f3` = $(@bind maxiter_f3 Slider(0:100, default=0, show_value=true))
+`maxiter_f3` = $(@bind maxiter_f3 Slider(0:8, default=0, show_value=true))
 """
 
 # ╔═╡ ed3e95a2-9a42-4c1b-aff1-e0d1859ffff7
