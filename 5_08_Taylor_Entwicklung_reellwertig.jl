@@ -32,119 +32,171 @@ end
 # ╔═╡ b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 using LaTeXStrings
 
-# ╔═╡ 719ecaba-77f5-4f0f-9b73-6175c37c46b0
-using TaylorSeries
-
-# ╔═╡ af35e85f-6440-412b-894b-2f040318489b
-using PolynomialBases: legendre
-
-# ╔═╡ 1e7bcdb9-3c62-4f7a-98f6-15e0c21d054f
-using QuadGK
-
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
-# 4.7 Fourier-Reihen
+# 5.8 Taylor-Entwicklung $\mathbb{R}^n \to \mathbb{R}$
 
-Wir betrachten Approximationen von Funktionen 
+Seien $X \subset \mathbb{R}^n$ offen und $f\colon X \to \mathbb{R}$ $(m+1)$-mal
+stetig partiell differenzierbar. Dann gilt für $x, x_0 \in X$
 
-$$f\colon [-\pi, \pi] \to \mathbb{R}$$
-
-durch Reihen-Entwicklungen und vergleichen die Taylor-Entwicklung
-
-$$T_n(x; x_0) = \sum_{k=0}^n \frac{f^{(k)}(x_0)}{k!} (x - x_0)^k$$
-
-mit der Best-Approximation
-
-$$\begin{aligned}
-  F_n(x) &= \frac{1}{2} a_0 + \sum_{k=1}^n \left( a_k \cos(k x) + b_k \sin(k x) \right),
-  \\
-  a_k &= \frac{1}{\pi} \int_{-\pi}^\pi f(x) \cos(k x) \mathrm{d} x,
-  \\
-  b_k &= \frac{1}{\pi} \int_{-\pi}^\pi f(x) \sin(k x) \mathrm{d} x,
-\end{aligned}$$
-
-im quadratischen Mittel durch Fourier-Polynome.
+$$f(x)
+=
+\underbrace{\sum_{|\alpha| = 0}^m \frac{1}{\alpha!} \partial^\alpha f(x_0) (x - x_0)^\alpha}_{T_m(x; x_0)}
++ O(\| x - x_0 \|^{m+1}).$$
 """
 
-# ╔═╡ d480e309-f5e9-42a2-9502-a182e82b0657
+# ╔═╡ 4f4742ef-9ff3-4b6b-972b-ab8c9a701f47
 md"""
-## Eine glatte, periodische Funktion
+## Beispiel
 
-Wir betrachten die Funktion
+In der Vorlesung haben wir das Beispiel
 
-$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \mathrm{e}^{\sin(x)},$$
+$$f\colon \mathbb{R}^2 \to \mathbb{R}, \quad f(x, y) = \mathrm{e}^{x y} + \sin(x^2 + y^2)$$
 
-und verwenden $x_0 = 0$ für die Taylor-Entwicklung.
+durchgerechnet, das wir hier visualisieren.
 """
 
-# ╔═╡ 62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
+# ╔═╡ d1948db3-b73e-4a38-b05e-d65e5e013f80
+let
+	fig = Figure(size = (800, 400))
+	ax3 = Axis3(fig[1, 1];
+			    xlabel = L"x", ylabel = L"y", zlabel = L"z")
+	ax2 = Axis(fig[1, 2];
+			   xlabel = L"x", ylabel = L"y", aspect = DataAspect())
+	Label(fig[1, :, Top()], L"Funktion $f$", fontsize = 20, padding = (0, 0, 10, 0))
+
+	x0 = 0.0
+	y0 = sqrt(π)
+	x = range(-1, 1, length = 100)
+	y = range(1, 3, length = 100)
+
+	f(x, y) = exp(x * y) + sin(x^2 + y^2)
+	
+	z = [f(x, y) for x in x, y in y]
+	surface!(ax3, x, y, z)
+	hm = heatmap!(ax2, x, y, z)
+	Colorbar(fig[:, end + 1], hm)
+	scatter!(ax2, [x0], [y0], color = :gray, marker = :x)
+
+	fig
+end
+
+# ╔═╡ 7f76e3b9-f7f8-40b8-ae2a-a445bae7baca
+let
+	fig = Figure(size = (800, 400))
+	ax3 = Axis3(fig[1, 1];
+			    xlabel = L"x", ylabel = L"y", zlabel = L"z")
+	ax2 = Axis(fig[1, 2];
+			   xlabel = L"x", ylabel = L"y", aspect = DataAspect())
+	Label(fig[1, :, Top()], L"Taylor-Polynom $T_3 \, f$", fontsize = 20, padding = (0, 0, 10, 0))
+
+	x0 = 0.0
+	y0 = sqrt(π)
+	x = range(-1, 1, length = 100)
+	y = range(1, 3, length = 100)
+
+	Tf(x, y) = 1 +
+         sqrt(pi) * x -
+         2 * sqrt(pi) * (y - sqrt(pi)) +
+         (1 / 2) * (pi - 2) * x^2 +
+         x * (y - sqrt(pi)) -
+         (y - sqrt(pi))^2 +
+         (1 / 6) * pi^(3 / 2) * x^3 +
+         sqrt(pi) * x^2 * (y - sqrt(pi)) +
+         (4 / 3) * pi^(3 / 2) * (y - sqrt(pi))^3
+
+	
+	z = [Tf(x, y) for x in x, y in y]
+	surface!(ax3, x, y, z)
+	hm = heatmap!(ax2, x, y, z)
+	Colorbar(fig[:, end + 1], hm)
+	scatter!(ax2, [x0], [y0], color = :gray, marker = :x)
+
+	fig
+end
+
+# ╔═╡ 7c719354-a96d-4e44-ab7e-34e663c638e6
+let
+	fig = Figure(size = (800, 400))
+	ax3 = Axis3(fig[1, 1];
+			    xlabel = L"x", ylabel = L"y", zlabel = L"z")
+	ax2 = Axis(fig[1, 2];
+			   xlabel = L"x", ylabel = L"y", aspect = DataAspect())
+	Label(fig[1, :, Top()], L"Fehler $|f - T_3 \, f\,|$", fontsize = 20, padding = (0, 0, 10, 0))
+
+	x0 = 0.0
+	y0 = sqrt(π)
+	x = range(-1, 1, length = 100)
+	y = range(1, 3, length = 100)
+
+	f(x, y) = exp(x * y) + sin(x^2 + y^2)
+	Tf(x, y) = 1 +
+         sqrt(pi) * x -
+         2 * sqrt(pi) * (y - sqrt(pi)) +
+         (1 / 2) * (pi - 2) * x^2 +
+         x * (y - sqrt(pi)) -
+         (y - sqrt(pi))^2 +
+         (1 / 6) * pi^(3 / 2) * x^3 +
+         sqrt(pi) * x^2 * (y - sqrt(pi)) +
+         (4 / 3) * pi^(3 / 2) * (y - sqrt(pi))^3
+
+	
+	z = [abs(f(x, y) - Tf(x, y)) for x in x, y in y]
+	surface!(ax3, x, y, z)
+	hm = heatmap!(ax2, x, y, z; colorscale = log10)
+	Colorbar(fig[:, end + 1], hm)
+	scatter!(ax2, [x0], [y0], color = :gray, marker = :x)
+
+	fig
+end
+
+# ╔═╡ 08495db9-9357-4827-b020-42f2961be69f
 md"""
-``n`` = $(@bind n_expsinpi Select(0:30, default=10))
+Schließlich betrachten wir den Fehler entlang einer Geraden durch den
+Entwicklungspunkt mit einem Winkel ``\varphi`` zur $x$-Achse.
 """
 
-# ╔═╡ 1cd29a4f-3abe-42c1-8354-17e07babf356
+# ╔═╡ 7ec0d26d-534e-4885-82eb-2b83aa459a94
 md"""
-Hier können wir mehrere typische Verhalten erkennen:
-- Die Fourier-Approximation ist im gesamten Intervall gut während die Taylor-Approximation vor allem nahe des Entwicklungspunktes gut ist.
-- Dicht beim Entwicklungspunkt ist die Taylor-Approximation besser als die Fourier-Approximation, weiter davon entfernt ist es genau anders - mit zum Teil großen Fehlern der Taylor-Approximation am Rand des Intervalls.
-- Beide Approximationen scheinen gegen die Funktion $f$ zu konvergieren.
+``φ`` (in °) = $(@bind φ Slider(0:360, default = 0, show_value = true))
 """
 
-# ╔═╡ 18869884-5b58-49b4-8b87-2468359f1aeb
-md"""
-## Eine stetige aber nicht überall stetig-differenzierbare Funktion
+# ╔═╡ 43e235a5-b46f-4274-9e9d-07173c8d3497
+let
+	fig = Figure(size = (800, 400))
+	ax = Axis(fig[1, 1];
+			  xlabel = L"Abstand von $(x_0, y_0)^T$",
+			  xscale = log10, yscale = log10)
 
-Wir betrachten die Funktion
+	x0 = 0.0
+	y0 = sqrt(π)
+	r = 10.0 .^ range(-5, 0, length = 500)
+	x = @. x0 + r .* cos(φ)
+	y = @. y0 + r .* sin(φ)
 
-$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \begin{cases}
-	\cos(x), & -\frac{\pi}{2} \le x \le \frac{\pi}{2}, \\
-	0, & \text{sonst},
-\end{cases}$$
+	f(x, y) = exp(x * y) + sin(x^2 + y^2)
+	Tf(x, y) = 1 +
+         sqrt(pi) * x -
+         2 * sqrt(pi) * (y - sqrt(pi)) +
+         (1 / 2) * (pi - 2) * x^2 +
+         x * (y - sqrt(pi)) -
+         (y - sqrt(pi))^2 +
+         (1 / 6) * pi^(3 / 2) * x^3 +
+         sqrt(pi) * x^2 * (y - sqrt(pi)) +
+         (4 / 3) * pi^(3 / 2) * (y - sqrt(pi))^3
 
-und verwenden $x_0 = 0$ für die Taylor-Entwicklung.
-"""
+	
+	z = @. eps() + abs(f(x, y) - Tf(x, y))
+	lines!(ax, r, z, label = L"Fehler $|f - T_3 \, f\,|$")
 
-# ╔═╡ d45a37a1-1429-4256-8310-5f9c7b6db664
-md"""
-``n`` = $(@bind n_cos0 Select(0:30, default=10))
-"""
+	hint = r.^(4); hint .= hint .* 0.1 * z[end] / hint[end]
+	hint[hint .< eps()] .= NaN
+	lines!(ax, r, hint, label = L"\mathcal{O}(r^4)")
 
-# ╔═╡ 632d1634-70e1-41d5-8265-915081674439
-md"""
-Auch hier können wir mehrere typische Verhalten erkennen:
-- Die Taylor-Approximation kann nur den "inneren Teil" gut approximieren.
-- Die Fourier-Approximation konvergiert deutlich langsamer als bei der glatten Funktion vorher.
-"""
+	fig[1, 2] = Legend(fig, ax, framevisible = false)
 
-# ╔═╡ 114dfa5d-f10c-45f4-9794-3671294e2d12
-md"""
-## Eine unstetige Funktion
-
-Wir betrachten die Funktion
-
-$$f\colon [-\pi, \pi] \to \mathbb{R}, \qquad f(x) = \begin{cases}
-	-1, & x < 0, \\
-	0, & x = 0, \\
-	1, & x > 0.
-\end{cases}$$
-
-Da $f$ unstetig ist, betrachten wir keine Taylor-Entwicklung.
-"""
-
-# ╔═╡ 7be655af-2879-40a6-9818-afc69fb05c16
-md"""
-``n`` = $(@bind n_sign Select(0:30, default=10))
-"""
-
-# ╔═╡ a161897c-a8aa-4b21-9be7-46aeec3623b0
-md"""
-Hier können wir ebenfalls einige typische Verhaltensweisen beobachten:
-- Ausreichend weit von der Unstetigkeitsstelle entfernt scheint die Approximation weiterhin punktweise zu konvergieren - allerdings noch langsamer als vorher.
-- Nahe der Unstetigkeitsstelle gibt es immer Über- und Unter-Schwingungen, deren Amplitude nicht abnimmt. Dies ist als [Gibbs'sches Phänomen](https://de.wikipedia.org/wiki/Gibbssches_Phänomen) bekannt.
-- Trotzdem wird die Approximation im quadratischen Mittel besser - man kann zeigen, dass
-
-$$\| f - F_n\|_{L^2(-\pi,\pi)} \to 0, \quad n \to \infty.$$
-"""
+	fig
+end
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
 md"""
@@ -173,172 +225,17 @@ _First, we will install (and compile) some packages. This can take a few minutes
 """
 
 
-# ╔═╡ 16a17b2d-dae9-43ad-9335-cdd5b7bee3d9
-function inner_product(f, g)
-	res, err = quadgk(-π, π) do x
-		return conj(f(x)) * g(x)
-	end
-	return res
-end
-
-# ╔═╡ 0172626c-0c9c-4390-a7bb-e7912130b6ce
-function fourier_coefficients(f, n)
-	a0 = inner_product(one, f) / π
-	a = zeros(n)
-	b = zeros(n)
-	for k in 1:n
-		a[k] = inner_product(x -> cos(k * x), f) / π
-		b[k] = inner_product(x -> sin(k * x), f) / π
-	end
-	return a0, a, b
-end
-
-# ╔═╡ b4902a1f-68c9-423f-a062-627f7b1df2ec
-function evaluate_fourier_coefficients(x::Number, c)
-	a0, a, b = c
-	n = length(a)
-	res = a0 / 2
-	for k in 1:n
-		si, co = sincos(k * x)
-		res += a[k] * co + b[k] * si
-	end
-	return res
-end
-
-# ╔═╡ 7fbfa3ad-6a2f-4d5c-9045-00cf3abd5ce1
-function evaluate_fourier_coefficients(x::AbstractVector, c)
-	map(x) do x
-		evaluate_fourier_coefficients(x, c)
-	end
-end
-
-# ╔═╡ 28883abe-617c-4261-9274-c55d080ccc91
-let f = x -> exp(sin(x)), n = n_expsinpi, x0 = 0.0
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x")
-
-	x = range(-π, π, step = 1.0e-2)
-	f_x = @. f(x)
-	lines!(ax, x, f_x; label = L"\exp(\sin(x))", color = :gray)
-
-	taylor = f(Taylor1(n) + x0)
-	taylor_x = @. taylor(x - x0)
-	lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
-
-	fourier_c = fourier_coefficients(f, n)
-	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
-	lines!(ax, x, fourier_x; label = L"F_n(x)", linestyle = :dot)
-
-	ylims!(ax, 0.1, 2.9)
-	axislegend(position = :lt)
-
-	
-	ax_error = Axis(fig[2, 1]; xlabel = L"x", ylabel = "Fehler", yscale = log10)
-	linkxaxes!(ax, ax_error)
-	
-	max_error = @. abs(f_x - taylor_x) + eps()
-	lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
-	
-	max_error = @. abs(f_x - fourier_x) + eps()
-	lines!(ax_error, x, max_error; label = L"F_n(x)", linestyle = :dot)
-	
-	axislegend(position = :lc)
-
-	fig
-end
-
-# ╔═╡ 86e05582-ae2a-4f63-b391-003cf7d805c4
-let f = x -> ifelse(-0.5 * π <= x <= 0.5 * π, cos(x), 0.0), n = n_cos0, x0 = 0.0
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x")
-
-	x = range(-π, π, step = 1.0e-2)
-	f_x = @. f(x)
-	lines!(ax, x, f_x; label = L"f(x)", color = :gray)
-
-	taylor = f(Taylor1(n) + x0)
-	taylor_x = @. taylor(x - x0)
-	lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
-
-	fourier_c = fourier_coefficients(f, n)
-	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
-	lines!(ax, x, fourier_x; label = L"F_n(x)", linestyle = :dot)
-
-	ylims!(ax, -0.1, 1.1)
-	axislegend(position = :lt)
-
-	
-	ax_error = Axis(fig[2, 1]; xlabel = L"x", ylabel = "Fehler", yscale = log10)
-	linkxaxes!(ax, ax_error)
-	
-	max_error = @. abs(f_x - taylor_x) + eps()
-	lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
-	
-	max_error = @. abs(f_x - fourier_x) + eps()
-	lines!(ax_error, x, max_error; label = L"F_n(x)", linestyle = :dot)
-	
-	axislegend(position = :lc)
-
-	fig
-end
-
-# ╔═╡ 4282c56e-c482-48e5-b3b6-6cd21c4c57ed
-let f = sign, n = n_sign
-	fig = Figure()
-	ax = Axis(fig[1, 1]; xlabel = L"x")
-
-	x = range(-π, π, length = 1 + 10^3)
-	f_x = @. f(x)
-	idx = findfirst(iszero, x)
-	f_x[idx] = NaN
-	lines!(ax, x, f_x; label = L"f(x)", color = :gray)
-	scatter!(ax, [0.0], [0.0]; color = :gray)
-
-	# taylor = f(Taylor1(n) + x0)
-	# taylor_x = @. taylor(x - x0)
-	# lines!(ax, x, taylor_x; label = L"T_n(x;\, x_0)", linestyle = :dash)
-
-	fourier_c = fourier_coefficients(f, n)
-	fourier_x = evaluate_fourier_coefficients(x, fourier_c)
-	lines!(ax, x, fourier_x; label = L"L_n(x)", linestyle = :dot,
-		   color = Makie.wong_colors()[2])
-
-	ylims!(ax, -1.3, 1.3)
-	axislegend(position = :lt)
-
-	
-	ax_error = Axis(fig[2, 1]; xlabel = L"x", ylabel = "Fehler", yscale = log10)
-	linkxaxes!(ax, ax_error)
-	
-	# max_error = @. abs(f_x - taylor_x) + eps()
-	# lines!(ax_error, x, max_error; label = L"T_n(x;\, x_0)", linestyle = :dash)
-	
-	max_error = @. abs(f_x - fourier_x) + eps()
-	lines!(ax_error, x, max_error; label = L"L_n(x)", linestyle = :dot,
-		   color = Makie.wong_colors()[2])
-	
-	axislegend(position = :lt)
-
-	fig
-end
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-PolynomialBases = "c74db56a-226d-5e98-8bb0-a6049094aeea"
-QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-TaylorSeries = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
 
 [compat]
 CairoMakie = "~0.12.15"
 LaTeXStrings = "~1.4.0"
 PlutoUI = "~0.7.60"
-PolynomialBases = "~0.4.22"
-QuadGK = "~2.11.1"
-TaylorSeries = "~0.18.2"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -347,7 +244,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.7"
 manifest_format = "2.0"
-project_hash = "24f2589a8a4fa7928b4fe79a3c2e12a479a47bec"
+project_hash = "fcadc9b7586263c73f362da67c00d00051f0831e"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -398,22 +295,12 @@ git-tree-sha1 = "e81c509d2c8e49592413bfb0bb3b08150056c79d"
 uuid = "27a7e980-b3e6-11e9-2bcd-0b925532e340"
 version = "0.4.1"
 
-[[deps.ArgCheck]]
-git-tree-sha1 = "a3a402a35a2f7e0b87828ccabbd5ebfbebe356b4"
-uuid = "dce04be8-c92d-5529-be00-80e4d2c0e197"
-version = "2.3.0"
-
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
-
-[[deps.AutoHashEquals]]
-git-tree-sha1 = "4ec6b48702dacc5994a835c1189831755e4e76ef"
-uuid = "15f4f7f2-30c1-5605-9d31-71845cf9641f"
-version = "2.2.0"
 
 [[deps.Automa]]
 deps = ["PrecompileTools", "SIMD", "TranscodingStreams"]
@@ -662,12 +549,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "4d81ed14783ec49ce9f2e168208a12ce1815aa25"
 uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
 version = "3.3.10+1"
-
-[[deps.FastGaussQuadrature]]
-deps = ["LinearAlgebra", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "fd923962364b645f3719855c88f7074413a6ad92"
-uuid = "442a2c76-b920-505d-bb47-c5924d526838"
-version = "1.0.2"
 
 [[deps.FastRounding]]
 deps = ["ErrorfreeArithmetic", "LinearAlgebra"]
@@ -1322,12 +1203,6 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
-[[deps.PolynomialBases]]
-deps = ["ArgCheck", "AutoHashEquals", "FFTW", "FastGaussQuadrature", "LinearAlgebra", "Requires", "SimpleUnPack", "SpecialFunctions"]
-git-tree-sha1 = "b62fd0464edfffce54393cd617135af30fa47006"
-uuid = "c74db56a-226d-5e98-8bb0-a6049094aeea"
-version = "0.4.22"
-
 [[deps.PrecompileTools]]
 deps = ["Preferences"]
 git-tree-sha1 = "5aa36f7049a63a1528fe8f7c3f2113413ffd4e1f"
@@ -1488,11 +1363,6 @@ git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
 
-[[deps.SimpleUnPack]]
-git-tree-sha1 = "58e6353e72cde29b90a69527e56df1b5c3d8c437"
-uuid = "ce78b400-467f-4804-87d8-8f486da07d0a"
-version = "1.1.0"
-
 [[deps.Sixel]]
 deps = ["Dates", "FileIO", "ImageCore", "IndirectArrays", "OffsetArrays", "REPL", "libsixel_jll"]
 git-tree-sha1 = "2da10356e31327c7096832eb9cd86307a50b1eb6"
@@ -1627,24 +1497,6 @@ version = "1.12.0"
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 version = "1.10.0"
-
-[[deps.TaylorSeries]]
-deps = ["LinearAlgebra", "Markdown", "Requires", "SparseArrays"]
-git-tree-sha1 = "267e579c6aa0e1605bb5dc681996bb1e3a43c740"
-uuid = "6aa5eb33-94cf-58f4-a9d0-e4b2c4fc25ea"
-version = "0.18.2"
-
-    [deps.TaylorSeries.extensions]
-    TaylorSeriesIAExt = "IntervalArithmetic"
-    TaylorSeriesJLD2Ext = "JLD2"
-    TaylorSeriesRATExt = "RecursiveArrayTools"
-    TaylorSeriesSAExt = "StaticArrays"
-
-    [deps.TaylorSeries.weakdeps]
-    IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
-    JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-    RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
-    StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [[deps.TensorCore]]
 deps = ["LinearAlgebra"]
@@ -1855,18 +1707,13 @@ version = "3.6.0+0"
 
 # ╔═╡ Cell order:
 # ╟─e6c64c80-773b-11ef-2379-bf6609137e69
-# ╟─d480e309-f5e9-42a2-9502-a182e82b0657
-# ╟─62eb15cf-1d4e-4f5f-b28a-0da9e95404b2
-# ╟─28883abe-617c-4261-9274-c55d080ccc91
-# ╟─1cd29a4f-3abe-42c1-8354-17e07babf356
-# ╟─18869884-5b58-49b4-8b87-2468359f1aeb
-# ╟─d45a37a1-1429-4256-8310-5f9c7b6db664
-# ╟─86e05582-ae2a-4f63-b391-003cf7d805c4
-# ╟─632d1634-70e1-41d5-8265-915081674439
-# ╟─114dfa5d-f10c-45f4-9794-3671294e2d12
-# ╟─7be655af-2879-40a6-9818-afc69fb05c16
-# ╟─4282c56e-c482-48e5-b3b6-6cd21c4c57ed
-# ╟─a161897c-a8aa-4b21-9be7-46aeec3623b0
+# ╟─4f4742ef-9ff3-4b6b-972b-ab8c9a701f47
+# ╟─d1948db3-b73e-4a38-b05e-d65e5e013f80
+# ╟─7f76e3b9-f7f8-40b8-ae2a-a445bae7baca
+# ╟─7c719354-a96d-4e44-ab7e-34e663c638e6
+# ╟─08495db9-9357-4827-b020-42f2961be69f
+# ╟─7ec0d26d-534e-4885-82eb-2b83aa459a94
+# ╟─43e235a5-b46f-4274-9e9d-07173c8d3497
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
@@ -1876,12 +1723,5 @@ version = "3.6.0+0"
 # ╠═f05a5972-58b1-4788-a0a8-24966d6714da
 # ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
-# ╠═719ecaba-77f5-4f0f-9b73-6175c37c46b0
-# ╠═af35e85f-6440-412b-894b-2f040318489b
-# ╠═1e7bcdb9-3c62-4f7a-98f6-15e0c21d054f
-# ╠═16a17b2d-dae9-43ad-9335-cdd5b7bee3d9
-# ╠═0172626c-0c9c-4390-a7bb-e7912130b6ce
-# ╠═b4902a1f-68c9-423f-a062-627f7b1df2ec
-# ╠═7fbfa3ad-6a2f-4d5c-9045-00cf3abd5ce1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
