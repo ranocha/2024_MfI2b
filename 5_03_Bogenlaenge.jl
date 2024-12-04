@@ -39,6 +39,42 @@ md"""
 Die *Bogenlänge* einer Kurve soll deren intuitive Länge beschreiben. Man kann diese über Approximationen mit Polygonzügen definieren. Hier verwenden wir Polygonzüge mit $N$ Abschnitten.
 """
 
+# ╔═╡ 89162a7c-a0f6-4ec6-b0a7-716387efb799
+md"""
+``N`` = $(@bind n_circle Slider(10:111, default = 10, show_value = true))
+"""
+
+# ╔═╡ 5789d66d-9637-4169-b3df-8506692e3a8f
+let
+	function γ(t)
+		y, x = sincos(t)
+
+		return x, y
+	end
+	
+	fig = Figure()
+	ax = Axis(fig[1, 1]; xlabel = L"x", ylabel = L"y")
+
+	t = range(0, 2 * π, length = 1000)
+	lines!(ax, γ.(t); label = L"\mathrm{im}(c)")
+
+	t_polygon = range(first(t), last(t), length = n_circle)
+	polygon = γ.(t_polygon)
+	scatterlines!(ax, polygon;
+				  label = "Polygon", color = Makie.wong_colors()[2])
+	
+	length_polygon = sqrt(sum(abs2, polygon[begin] .- polygon[end]))
+	for i in 2:length(polygon)
+		length_polygon += sqrt(sum(abs2, polygon[i] .- polygon[i - 1]))
+	end
+	
+	ax.title = "Länge des Polygonzugs: $length_polygon"
+
+	fig[1, 2] = Legend(fig, ax; framevisible = false)
+
+	fig
+end
+
 # ╔═╡ 79b6fedd-0fbb-44bb-a726-8798d4de6548
 md"""
 ``N`` = $(@bind n_batman Slider(10:1:111, default = 10, show_value = true))
@@ -225,7 +261,7 @@ PlutoUI = "~0.7.60"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.10.5"
+julia_version = "1.10.7"
 manifest_format = "2.0"
 project_hash = "fcadc9b7586263c73f362da67c00d00051f0831e"
 
@@ -1690,6 +1726,8 @@ version = "3.6.0+0"
 
 # ╔═╡ Cell order:
 # ╟─e6c64c80-773b-11ef-2379-bf6609137e69
+# ╟─89162a7c-a0f6-4ec6-b0a7-716387efb799
+# ╟─5789d66d-9637-4169-b3df-8506692e3a8f
 # ╟─79b6fedd-0fbb-44bb-a726-8798d4de6548
 # ╟─679e8462-a7ce-49c7-b216-eb1737f7997e
 # ╟─35c8aaad-baae-48fb-936f-a584265023dc
