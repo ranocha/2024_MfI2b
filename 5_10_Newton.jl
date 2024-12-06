@@ -32,6 +32,9 @@ begin
 			   markersize = 16)
 end
 
+# ╔═╡ 931ad331-97d7-4c46-980c-8e7c4a561c89
+using ColorTypes
+
 # ╔═╡ b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 using LaTeXStrings
 
@@ -72,9 +75,111 @@ md"""
 ``N`` = $(@bind maxiter_f2 Slider(0:10, default = 1, show_value = true))
 """
 
+# ╔═╡ 878d9a5b-98f4-4712-8cb2-4418b21fc170
+md"""
+### Fraktale Struktur
+
+Wir betrachten die Funktion
+
+$$f\colon \mathbb{C} \to \mathbb{C}, \quad f(z) = z^3.$$
+
+Wir können $\mathbb{C}$ mit dem $\mathbb{R}^2$ identifizieren und können dann
+das Newton-Verfahren im Mehrdimensionalen anwenden, um Nullstellen von $f$
+zu suchen. Die drei Nullstellen von $f$ sind
+
+$$1, \quad -\frac{1}{2} \pm \frac{\sqrt{3}}{2} i.$$
+
+Ausgehen von einem Startwert $z_0 = x_0 + i y_0$ kann das Newton-Verfahren entweder
+gegen eine der drei Nullstellen konvergieren oder divergieren. Im Falle der 
+Konvergenz färben wir den Pixel des Startwerts entsprechend nach der Anzahl der
+Iterationen. Falls keine Konvergenz vorliegt wird der Pixel schwarz gefärbt.
+"""
+
+# ╔═╡ ec763ec5-2423-47ee-b5e8-b2836060d0da
+let
+	# Definiere die Funktion und ihre Ableitung
+	f(z) = z^3 - 1
+	fprime(z) = 3 * z^2
+	
+	# Wurzeln von z³ - 1 = 0
+	roots = [1 + 0im,
+	         -1/2 + im * sqrt(3) / 2,
+	         -1/2 - im * sqrt(3) / 2]
+	
+	# Funktion für das Newton-Verfahren
+	function newton_convergence(z0; maxiter=50, tol=1e-6)
+	    z = z0
+	    for i in 1:maxiter
+	        z_old = z
+	        z = z - f(z) / fprime(z)
+	        if abs(z - z_old) < tol
+	            # Bestimme, welcher Wurzel z am nächsten ist
+	            dists = [abs(z - r) for r in roots]
+	            root_index = argmin(dists)
+	            return (root_index, i)
+	        end
+	    end
+	    return (0, maxiter) # Keine Konvergenz
+	end
+
+	function newton_img()
+		# Parameter für das Bild
+		width = 800
+		height = 800
+		x_min, x_max = -1.5, 1.5
+		y_min, y_max = -1.5, 1.5
+		
+		# Farben für die unterschiedlichen Wurzeln
+		# root_colors = [RGBAf(1, 0, 0, 1),  # rot
+		#                RGBAf(0, 1, 0, 1),  # grün
+		#                RGBAf(0, 0, 1, 1)]  # blau
+		# root_colors = [
+		#     RGBAf(0.0, 0.447, 0.741, 1.0),   # blau
+		#     RGBAf(0.835, 0.369, 0.0, 1.0),  # orange
+		#     RGBAf(0.0, 0.62, 0.45, 1.0)     # blaugrün
+		# ]
+		root_colors = Makie.wong_colors()[1:3]
+		
+		# Erzeuge ein Array, um die Farben (RGB) zu speichern
+		img = Array{RGBAf}(undef, height, width)
+		
+		for py in 1:height
+		    y = y_min + (y_max - y_min)*(py-1)/(height-1)
+		    for px in 1:width
+		        x = x_min + (x_max - x_min) * (px - 1) / (width - 1)
+		        (root_index, iter) = newton_convergence(x + im * y)
+		        if root_index == 0
+		            # Keine Konvergenz: schwarz
+		            img[py, px] = RGBAf(0, 0, 0, 1)
+		        else
+		            # Farbe entsprechend der Wurzel
+		            base_color = root_colors[root_index]
+		            # Helligkeit abhängig von der Iterationszahl
+		            factor = 1 - (iter / 50)
+		            img[py, px] = RGBAf(base_color.r * factor, base_color.g * factor, base_color.b * factor, 1)
+		        end
+		    end
+		end
+	
+		img, x_min, x_max, y_min, y_max
+	end
+
+	img, x_min, x_max, y_min, y_max = newton_img()
+	fig, ax, _ = image(img)
+	hideydecorations!(ax)
+	hidexdecorations!(ax)
+	
+	fig
+end
+
+# ╔═╡ e2f79bbb-1afa-4483-a7cc-cf65a59d1b61
+md"""
+## Newton-Verfahren zur Optimierung
+"""
+
 # ╔═╡ fa0a6358-01f0-41a0-9129-48232743ce35
 md"""
-## Rosenbrock-Funktion
+### Rosenbrock-Funktion
 
 Wir betrachten wieder die Funktion
 
@@ -133,8 +238,6 @@ end
 
 # ╔═╡ f4410109-de24-42eb-a140-d99b81657bcc
 md"""
-### Newton-Verfahren zur Optimierung
-
 Zum Auffinden von Extremstellen einer Funktion $f\colon \mathbb{R}^n \to \mathbb{R}$
 betrachten wir die kritischen Punkte mit $\nabla f(x) = 0$. Anwendung des
 Newton-Verfahrens liefert
@@ -331,6 +434,7 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
@@ -340,6 +444,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 CairoMakie = "~0.12.16"
+ColorTypes = "~0.11.5"
 Enzyme = "~0.13.19"
 LaTeXStrings = "~1.4.0"
 LineSearches = "~7.3.0"
@@ -353,7 +458,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.7"
 manifest_format = "2.0"
-project_hash = "689300d056d2b683dfec051ed3e2ef3cdafaac3b"
+project_hash = "bd566b1ccf6165476a9c96b915426f2510fd6fb1"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2073,6 +2178,9 @@ version = "3.6.0+0"
 # ╟─9079de73-2ac7-4fd4-9d6c-993d61102d56
 # ╟─076b9076-95df-4ff0-9e83-50f7a9cabb93
 # ╟─f5e92d75-effb-4f5f-a7f0-ed34077bfd94
+# ╟─878d9a5b-98f4-4712-8cb2-4418b21fc170
+# ╟─ec763ec5-2423-47ee-b5e8-b2836060d0da
+# ╟─e2f79bbb-1afa-4483-a7cc-cf65a59d1b61
 # ╟─fa0a6358-01f0-41a0-9129-48232743ce35
 # ╟─fc5fb3c9-0ad7-40a0-8f85-c18a5e2caae3
 # ╟─31da451a-5d1c-4fe9-8946-6b9386707046
@@ -2091,6 +2199,7 @@ version = "3.6.0+0"
 # ╠═437a2d3f-7f19-4813-af1b-babd8b883310
 # ╠═f05a5972-58b1-4788-a0a8-24966d6714da
 # ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
+# ╠═931ad331-97d7-4c46-980c-8e7c4a561c89
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 # ╠═74031b96-6778-4146-8d30-122a9ddf56c3
 # ╠═feb49b9a-65e5-4b6e-be6c-8ab2c6f8d10d
