@@ -32,9 +32,6 @@ begin
 			   markersize = 16)
 end
 
-# ╔═╡ 931ad331-97d7-4c46-980c-8e7c4a561c89
-using ColorTypes
-
 # ╔═╡ b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 using LaTeXStrings
 
@@ -434,7 +431,6 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
@@ -444,7 +440,6 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 CairoMakie = "~0.12.16"
-ColorTypes = "~0.11.5"
 Enzyme = "~0.13.19"
 LaTeXStrings = "~1.4.0"
 LineSearches = "~7.3.0"
@@ -458,7 +453,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.7"
 manifest_format = "2.0"
-project_hash = "bd566b1ccf6165476a9c96b915426f2510fd6fb1"
+project_hash = "689300d056d2b683dfec051ed3e2ef3cdafaac3b"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2199,7 +2194,6 @@ version = "3.6.0+0"
 # ╠═437a2d3f-7f19-4813-af1b-babd8b883310
 # ╠═f05a5972-58b1-4788-a0a8-24966d6714da
 # ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
-# ╠═931ad331-97d7-4c46-980c-8e7c4a561c89
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 # ╠═74031b96-6778-4146-8d30-122a9ddf56c3
 # ╠═feb49b9a-65e5-4b6e-be6c-8ab2c6f8d10d

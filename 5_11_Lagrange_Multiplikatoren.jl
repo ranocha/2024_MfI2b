@@ -34,9 +34,6 @@ using LaTeXStrings
 # ╔═╡ 08d86f7a-7069-4afb-a4c0-7abf3e54055a
 using Images: load
 
-# ╔═╡ c6b0ee3a-f2f1-464c-aca3-db7d9cbe42be
-using ColorTypes: RGBAf
-
 # ╔═╡ e6c64c80-773b-11ef-2379-bf6609137e69
 md"""
 # 5.11 Lagrange-Multiplikatoren -- Extrema unter Nebenbedingungen
@@ -250,7 +247,6 @@ _First, we will install (and compile) some packages. This can take a few minutes
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
-ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -259,7 +255,6 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 CairoMakie = "~0.12.16"
-ColorTypes = "~0.11.5"
 Images = "~0.26.1"
 LaTeXStrings = "~1.4.0"
 PlutoUI = "~0.7.60"
@@ -271,7 +266,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.7"
 manifest_format = "2.0"
-project_hash = "3cab2784c1a3448c1a2307e5b32de633453fae29"
+project_hash = "87c698c24a6fe63269f4ef6b60623d8fb80b4a45"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2201,6 +2196,5 @@ version = "3.6.0+0"
 # ╠═e21f7893-67e3-42ba-82e8-1297502cc1ea
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 # ╠═08d86f7a-7069-4afb-a4c0-7abf3e54055a
-# ╠═c6b0ee3a-f2f1-464c-aca3-db7d9cbe42be
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
