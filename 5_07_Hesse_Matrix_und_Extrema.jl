@@ -156,7 +156,7 @@ $$\nabla f(x) = \begin{pmatrix} 4 x_1^3 + 4 x_1 x_2^2 \\ 4 x_1^2 x_2 +4 x_2^3 \e
 und
 
 $$H_f(x) = \begin{pmatrix} 12 x_1^2 + 4 x_2^2 & 8 x_1 x_2 \\ 
-8 x_1 x_2 & 12 x_2^2\end{pmatrix}.$$
+8 x_1 x_2 & 12 x_2^2 + 4 x_1^2\end{pmatrix}.$$
 
 Die einzige kritische Stelle ist also $x = 0$ mit $H_f(0) = 0$.
 Die Hesse-Matrix ist alse weder positiv/negativ definit noch indefinit und 
