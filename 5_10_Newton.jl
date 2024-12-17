@@ -78,7 +78,7 @@ md"""
 
 Wir betrachten die Funktion
 
-$$f\colon \mathbb{C} \to \mathbb{C}, \quad f(z) = z^3.$$
+$$f\colon \mathbb{C} \to \mathbb{C}, \quad f(z) = z^3 - 1.$$
 
 Wir können $\mathbb{C}$ mit dem $\mathbb{R}^2$ identifizieren und können dann
 das Newton-Verfahren im Mehrdimensionalen anwenden, um Nullstellen von $f$

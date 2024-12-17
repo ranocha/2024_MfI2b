@@ -59,9 +59,6 @@ implementieren - die Produkt- und Kettenregel etc. Vorher betrachten wir jedoch
 ein Beispiel.
 """
 
-# ╔═╡ a7d5feb5-c3c5-4d55-b721-f9a838a22e78
-f(x) = log(x^2 + exp(sin(x)))
-
 # ╔═╡ ee241f76-b1d9-4c00-9b53-020a1ba012dd
 md"""
 Wir können die Ableitung mithilfe der Kettenregel berechnen.
@@ -197,6 +194,9 @@ function Base.exp(x::MyDual)
 	e = exp(x.value)
 	return MyDual(e, e * x.deriv)
 end
+
+# ╔═╡ a7d5feb5-c3c5-4d55-b721-f9a838a22e78
+f(x) = log(x^2 + exp(sin(x)))
 
 # ╔═╡ b8b74818-30f8-4219-b293-657025589a44
 f′(x) = 1 / (x^2 + exp(sin(x))) * (2 * x + exp(sin(x)) * cos(x))

@@ -138,7 +138,7 @@ md"""
 
 # ╔═╡ 41be5b04-1c1b-40ba-9d7c-65c802ca939e
 md"""
-``v`` = $(@bind sphere_φ Slider(range(0.0, 2π, length = 51), default = 4.5, show_value = true))
+``\varphi`` = $(@bind sphere_φ Slider(range(0.0, 2π, length = 51), default = 4.5, show_value = true))
 """
 
 # ╔═╡ db94fc5a-35c9-4839-8d02-3a6c177daa4e
