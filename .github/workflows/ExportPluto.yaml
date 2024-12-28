@@ -25,6 +25,20 @@ jobs:
             - name: Checkout this repository
               uses: actions/checkout@v4
 
+            # With default settings, we get
+            #   ERROR: The following 1 direct dependency failed to precompile:
+            #   GLMakie [e9467ef8-e4e7-5192-8a1a-b1aee30e663a]
+            #   Failed to precompile GLMakie [e9467ef8-e4e7-5192-8a1a-b1aee30e663a] to "/home/runner/.julia/compiled/v1.10/GLMakie/jl_WhmHS9".
+            #   ┌ Warning:     OpenGL/GLFW wasn't loaded correctly or couldn't be initialized.
+            #   │     This likely means, you're on a headless server without having OpenGL support setup correctly.
+            #   │     Have a look at the troubleshooting section in the readme:
+            #   │     https://github.com/MakieOrg/Makie.jl/tree/master/GLMakie#troubleshooting-opengl.
+            #   └ @ GLMakie ~/.julia/packages/GLMakie/TH3rf/src/gl_backend.jl:4
+            #   ERROR: LoadError: InitError: Exception[GLFW.GLFWError(65550, "X11: The DISPLAY environment variable is missing"), ErrorException("glfwInit failed")]
+            # with GLMakie.jl used in some Pluto.jl notebooks.
+            - name: Install GLMakie dependencies
+              run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev xsettingsd x11-xserver-utils
+
             - name: Install Julia
               uses: julia-actions/setup-julia@v2
               with:
