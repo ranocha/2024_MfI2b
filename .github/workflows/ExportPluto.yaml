@@ -63,7 +63,7 @@ jobs:
 
             - name: Run & export Pluto notebooks
               run: |
-                julia -e 'using Pkg
+                DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia -e 'using Pkg
                   Pkg.activate(mktempdir())
                   Pkg.add([
                     Pkg.PackageSpec(name="PlutoSliderServer", version="0.3.2-0.3"),
