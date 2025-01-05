@@ -121,19 +121,6 @@ In den kommenden Vorlesungen werden wir besprechen, wie der Algorithmus
 funktioniert -- und welche Grundlagen der Analysis dabei verwendet werden!
 """
 
-# ╔═╡ 638a7911-95c8-4944-91c1-478dd04bfb1e
-md"""
-Jetzt können wir das Gesicht von Lincoln auf das Gemälde von Washington kopieren.
-Das sieht natürlich sehr stümperhaft aus.
-"""
-
-# ╔═╡ ddd9489f-8f95-4c0b-89f8-e6db0c4df328
-md"""
-Durch eine einfache Bildverarbeitung, die auf Analysis basiert, können wir die Bilder
-jedoch relativ gut aneinanderfügen. Dazu stellen wir zwei Varianten vor, die sich
-durch die Wahl der Farbgebung unterscheiden.
-"""
-
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
 md"""
 # Appendix
@@ -2334,8 +2321,6 @@ version = "3.6.0+0"
 # ╟─e90b1d9c-9d04-4a16-b3e4-442c32db5725
 # ╟─dce2245c-8eff-4690-82bc-407c32104041
 # ╟─a46b6791-d20e-43e3-b0d8-7ed0f0123b33
-# ╟─638a7911-95c8-4944-91c1-478dd04bfb1e
-# ╟─ddd9489f-8f95-4c0b-89f8-e6db0c4df328
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
