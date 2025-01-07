@@ -80,7 +80,7 @@ md"""
 Das würden wir jetzt gerne automatisieren! Dazu verwenden wir sogenannte
 [duale Zahlen](https://en.wikipedia.org/wiki/Dual_number#Differentiation).
 Diese haben einen Wert (`value`) und eine Ableitung (*derivative*, `deriv` --
-der ε von oben). Formal schreiben wir eine duale Zahl als
+der ε-Teil von oben). Formal schreiben wir eine duale Zahl als
 
 $$x + \varepsilon y, \qquad x, y \in \mathbb{R},$$
 
@@ -416,11 +416,11 @@ Als nächstes betrachten wir ein typisches Optimierungs-Problem, etwa
 
 $$\min_x \| A x - b \|_2^2,$$
 
-wobeio $A$ und $b$ gegeben sind. Um ein Optimierungsverfahren wie beispielsweise
+wobei $A$ und $b$ gegeben sind. Um ein Optimierungsverfahren wie beispielsweise
 den (stochastischen) Gradientenabstieg zu verwenden, müssen wir die Ableitungen
 bzgl. $x$ ausrechnen, d.h.,
 
-$$\nabla_x \| A x - b \|_2^2 = 2 (A x - b)^T A.$$
+$$\nabla_x \| A x - b \|_2^2 = 2 A^T (A x - b).$$
 
 Dies testen wir in einem Beispiel.
 """
@@ -436,7 +436,7 @@ let
 
 	x = randn(2)
 	result_ad = gradient_scalar(f, x)
-	result = 2 * (A * x - b)' * A
+	result = 2 * A' * (A * x - b)
 	
 	abs2(result_ad[1] - result[1]) + abs2(result_ad[2] - result[2])
 end
@@ -446,21 +446,21 @@ md"""
 Jetzt betrachten wir eine nicht-quadratische Matrix $A$ und nehmen
 $b = 0$ als Vereinfachung. Dann haben wir
 
-$$\nabla_x \| A x \|_2^2 = 2 (A x)^T A = 2 x^T A^T A.$$
+$$\nabla_x \| A x \|_2^2 = 2 A^T A x.$$
 
 Wenn man den Gradienten per Hand ausrechnen möchte, hat man zwei Möglichkeiten:
 
-- erst $A^T A$ berechnen und dann $x^T (A^T A)$
-- erst $x^T A^T$ berechnen und dann $(x^T A^T) A$
+- erst $A^T A$ berechnen und dann $(A^T A) x$
+- erst $A x$ berechnen und dann $A^T (A x)$
 
 Welche Möglichkeit soll man wählen?
 """
 
 # ╔═╡ f3d17d53-2fa9-4cad-a632-2cecac4e875a
-order_1(A, x) = x' * (A' * A)
+order_1(A, x) = (A' * A) * x
 
 # ╔═╡ 14d32872-7a1e-44c4-a60f-5a9a809e7298
-order_2(A, x) = (x' * A') * A
+order_2(A, x) = A' * (A * x)
 
 # ╔═╡ d4f127d2-7f4a-47e0-bd53-ada2066e2585
 md"### $4 \times 4$ Matrix"
