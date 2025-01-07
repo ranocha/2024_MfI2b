@@ -103,16 +103,21 @@ Jetzt können wir das Gesicht von Lagrange auf das Gemälde von Euler kopieren. 
 """
 
 # ╔═╡ 0074af6b-2d38-450e-951e-23014fe7a043
-img_merged_math_naive = begin
-	idx_math = BitMatrix(open(joinpath(@__DIR__, "lagrange_indices.txt"), "r") do io
+begin
+	idx_lagrange = BitMatrix(open(joinpath(@__DIR__, "lagrange_indices.txt"), "r") do io
 		readdlm(io)
 	end)
-	@. img_euler_original_cropped * !idx_math + img_lagrange_original_cropped * idx_math
+	@. img_euler_original_cropped * !idx_lagrange + img_lagrange_original_cropped * idx_lagrange
 end
 
 # ╔═╡ e90b1d9c-9d04-4a16-b3e4-442c32db5725
 md"""
 Durch eine einfache Bildverarbeitung, die auf Analysis basiert, können wir die Bilder jedoch relativ gut aneinanderfügen.
+"""
+
+# ╔═╡ 01fe71a6-88b8-4733-a480-47c67f19e40a
+md"""
+Das können wir auch in der anderen Reihenfolge machen und das Gesicht von Euler auf den Körper von Lagrange kopieren.
 """
 
 # ╔═╡ a46b6791-d20e-43e3-b0d8-7ed0f0123b33
@@ -353,17 +358,29 @@ end
 
 # ╔═╡ dce2245c-8eff-4690-82bc-407c32104041
 merge_images(
-	img_euler_original_cropped, .!(idx_math),
-	img_lagrange_original_cropped, idx_math)
+	img_euler_original_cropped, .!(idx_lagrange),
+	img_lagrange_original_cropped, idx_lagrange)
+
+# ╔═╡ 020a9b52-6fec-47b7-aa90-ecb49fd1558c
+let img_euler_original_cropped = map(RGB{Float64}, imresize(
+		img_euler_original[251:(end), 121:(end-100)],
+		size(img_lagrange_original_cropped)))
+	idx_euler = BitMatrix(open(joinpath(@__DIR__, "euler_indices.txt"), "r") do io
+		readdlm(io)
+	end)
+	merge_images(
+		img_lagrange_original_cropped, .!(idx_euler),
+		img_euler_original_cropped, idx_euler)
+end
 
 # ╔═╡ 1306520c-d7d4-486b-bf35-a43920603b7c
 # ╠═╡ disabled = true
 #=╠═╡
 let
-	img = load(joinpath(homedir(), "Downloads", "lincoln.png"))
-	img = map(Gray, img) # map(RGB, img)
-	idx = img .== 1 # .== RGB(1, 0, 0)
-	open(joinpath(@__DIR__, "lincoln_indices.txt"), "w") do io
+	img = load(joinpath(homedir(), "Downloads", "euler.png"))
+	img = map(RGB, img)
+	idx = img .== RGB(1, 0, 0)
+	open(joinpath(@__DIR__, "euler_indices.txt"), "w") do io
 		writedlm(io, idx)
 	end
 end
@@ -2320,6 +2337,8 @@ version = "3.6.0+0"
 # ╟─0074af6b-2d38-450e-951e-23014fe7a043
 # ╟─e90b1d9c-9d04-4a16-b3e4-442c32db5725
 # ╟─dce2245c-8eff-4690-82bc-407c32104041
+# ╟─01fe71a6-88b8-4733-a480-47c67f19e40a
+# ╟─020a9b52-6fec-47b7-aa90-ecb49fd1558c
 # ╟─a46b6791-d20e-43e3-b0d8-7ed0f0123b33
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
