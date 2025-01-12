@@ -42,7 +42,7 @@ using StatsBase
 
 # ╔═╡ da88f7a7-c899-4e46-83e7-00d543348b98
 md"""
-# 7.1 Bildverarbeitung mit Analysis und partiellen Differentialgleichungen
+# 7.0 Bildverarbeitung mit Analysis und partiellen Differentialgleichungen
 
 Als erstes betrachten wir zwei Gemälde von Mathematikern, die beide
 gemeinfrei (public domain) sind und von Wikimedia Commons geladen werden.
