@@ -23,6 +23,9 @@ using SparseArrays
 # ╔═╡ 746b3d05-afd9-45e8-899e-3a05b5fc9e4b
 using DelimitedFiles
 
+# ╔═╡ 98fd5421-6586-4d34-ba59-cefdb072bbbc
+using Printf
+
 # ╔═╡ f05a5972-58b1-4788-a0a8-24966d6714da
 begin
 	using PlutoUI
@@ -94,6 +97,16 @@ Anzahl Zeitschritte: $(@bind num_steps_explicit Select([100, 200, 500]))
 # ╔═╡ ac819375-d421-415b-a6c3-2cba60df7075
 md"""
 ``τ`` = $(@bind τ_explicit Slider(range(0.2, 0.3, step = 0.002), show_value = true))
+"""
+
+# ╔═╡ 887eb073-1e55-48eb-8235-6ce049870832
+md"""
+## Performance-Vergleich
+
+Jetzt vergleichen wir die Performance der beiden Verfahren (explizites und implizites Euler-Verfahren), um den stationären Zustand ausgehen vom mittleren
+Grauwert bis zu einer gewissen Toleranz zu erreichen -- abhängig von der Größe
+des Bildes. Wir erkennen klar, dass das implizite Verfahren für größere Bilder
+viel effizienter ist.
 """
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
@@ -256,36 +269,59 @@ scale_from_0_1(img) = img .+ one(real(eltype(img))) / 255
 scale_to_0_1(img) = img .- one(real(eltype(img))) / 255
 
 # ╔═╡ 7e599a31-39be-4cf4-8173-ab0bbbc79d88
-function run_osmosis_implicit(img_input, d, τ, nsteps)
+function run_osmosis_implicit(img_input, d, τ;
+							  nsteps = nothing,
+						      abstol = 1.0e-6, reltol = 1.0e-9)
 	img = scale_from_0_1(img_input)
 	A = osmosis_matrix(img, d)
 	
 	u = vec(img)
 	unew = copy(u)
 	fac = lu(I - τ * A)
-	for _ in 1:nsteps
+	if nsteps !== nothing
+		for _ in 1:nsteps
+			copyto!(u, unew)
+			ldiv!(unew, fac, u)
+		end
 		copyto!(u, unew)
+	else
+		tol = abstol + reltol * norm(u, 1)
 		ldiv!(unew, fac, u)
+		while norm(unew - u, 1) > tol
+			copyto!(u, unew)
+			ldiv!(unew, fac, u)
+		end
+		copyto!(u, unew)
 	end
-	copyto!(u, unew)
 	
 	img_output = scale_to_0_1(reshape(u, size(img)))
 	return img_output
 end
 
 # ╔═╡ 0913ace9-80c1-4fc2-bfeb-9537bd5658e5
-function run_osmosis_explicit(img_input, d, τ, nsteps)
+function run_osmosis_explicit(img_input, d, τ;
+							  nsteps = nothing,
+						      abstol = 1.0e-6, reltol = 1.0e-9)
 	img = scale_from_0_1(img_input)
 	A = osmosis_matrix(img, d)
 	
 	u = vec(img)
 	unew = copy(u)
-	for _ in 1:nsteps
+	if nsteps !== nothing
+		for _ in 1:nsteps
+			copyto!(u, unew)
+			mul!(unew, A, u, τ, 1)
+		end
 		copyto!(u, unew)
+	else
+		tol = abstol + reltol * norm(u, 1)
 		mul!(unew, A, u, τ, 1)
-		# unew = u + τ * A * u
+		while norm(unew - u, 1) > tol
+			copyto!(u, unew)
+			mul!(unew, A, u, τ, 1)
+		end
+		copyto!(u, unew)
 	end
-	copyto!(u, unew)
 	
 	img_output = scale_to_0_1(reshape(u, size(img)))
 	return img_output
@@ -342,7 +378,51 @@ let τ = τ_explicit
 	img0 = copy(img)
 	img0 .= mean(img0)
 
-	img = run_osmosis_explicit(img0, d, τ, num_steps_explicit)
+	img = run_osmosis_explicit(img0, d, τ; nsteps = num_steps_explicit)
+end
+
+# ╔═╡ b453c054-66a1-4932-8a92-b125b81db606
+let
+	img_input = map(Gray{Float64}, testimage(img_name_evolution_gray))
+
+	τ_explicit = 0.25
+	τ_implicit = 1.0e5
+	
+	let # compile
+		img = imresize(img_input, (8, 8))
+		d = drift_vector_field(scale_from_0_1(img))
+		img0 = map(gray, img)
+		img0 .= mean(img0)
+		run_osmosis_explicit(img0, d, τ_explicit)
+		run_osmosis_implicit(img0, d, τ_implicit)
+	end
+
+	# sizes = [(16, 16),]
+	sizes = [(16, 16), (32, 32), (64, 64), (96, 96)]
+	times_explicit = zeros(length(sizes))
+	times_implicit = zeros(length(sizes))
+	
+	for (i, sz) in enumerate(sizes)
+		img = imresize(img_input, sz)
+		d = drift_vector_field(scale_from_0_1(img))
+		
+		img0 = map(gray, img)
+		img0 .= mean(img0)
+	
+		times_explicit[i] = @elapsed run_osmosis_explicit(img0, d, τ_explicit)
+		times_implicit[i] = @elapsed run_osmosis_implicit(img0, d, τ_implicit)
+	end
+
+	table = """
+	Bildgröße | Laufzeit explizit | Laufzeit implizit
+	:--------:|:-----------------:|:-----------------:
+	"""
+	for i in eachindex(sizes)
+		table *= string(sizes[i]) * 
+				@sprintf(" | %.2e s", times_explicit[i]) * 
+				@sprintf(" | %.2e s\n", times_implicit[i])
+	end
+	Markdown.parse(table)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -357,6 +437,7 @@ LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MosaicViews = "e94cdb99-869f-56ef-bcf0-1ae2bcbe0389"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
@@ -380,7 +461,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.7"
 manifest_format = "2.0"
-project_hash = "cda4316f9132ffae59dbea4b154edcfdce5831b8"
+project_hash = "4baf9495d8437b3750f151bab80ee4b31f5df742"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -1628,6 +1709,8 @@ version = "17.4.0+2"
 # ╟─f671ea11-de94-4068-b97b-b63c22f92fec
 # ╟─ac819375-d421-415b-a6c3-2cba60df7075
 # ╟─b9a4b607-f28e-4b9f-8630-23728e2560db
+# ╟─887eb073-1e55-48eb-8235-6ce049870832
+# ╟─b453c054-66a1-4932-8a92-b125b81db606
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
@@ -1637,6 +1720,7 @@ version = "17.4.0+2"
 # ╠═437a2d3f-7f19-4813-af1b-babd8b883310
 # ╠═2a7e5541-fde7-444a-b41b-dfdeb63b24cf
 # ╠═746b3d05-afd9-45e8-899e-3a05b5fc9e4b
+# ╠═98fd5421-6586-4d34-ba59-cefdb072bbbc
 # ╠═f05a5972-58b1-4788-a0a8-24966d6714da
 # ╠═b0d18f0a-7ae7-4c9e-9e29-2f190aaae1c2
 # ╠═188bc26c-f0d6-46c5-b98f-326451eedcfd
