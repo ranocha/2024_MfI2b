@@ -43,11 +43,15 @@ using StatsBase
 
 # ╔═╡ 1ecd46f3-adaa-4990-a540-6c00fae2106c
 md"""
-# 7.3 Zeitlicher Verlauf der linearen Osmose
+# 7.4 Zeitintegration der diskretisierten linearen Osmose
 
 Wir initialisieren die Rechnung mit dem Anfangswert $u^0$ als Mittelwert des
 ursprünglichen Bildes. Die Abbildung unten zeigt von links oben nach rechts unten
-folgende Werte:
+folgende Werte, die mit dem impliziten Euler-Verfahren
+
+$$u^{n+1} = u^{n} + \tau A u^{n+1}$$
+
+approximiert wurden:
 
 - Anfangswert $u^0$ zur Zeit $t = 0$
 - Wert nach einem Schritt zur Zeit $t = 100$
@@ -55,6 +59,8 @@ folgende Werte:
 - Wert nach drei Schritten zur Zeit $t = 10^5$
 - Differenz von letztem Wert und ursprünglichem Bild
 - Ursprüngliches Bild
+
+Dabei wurde jeweils ein weiterer Schritt des Verfahrens gemacht.
 """
 
 # ╔═╡ e746f460-0b13-4e03-b4b1-b70c0d548c58
@@ -69,28 +75,25 @@ Bild: $(@bind img_name_evolution_gray Select([
 ]))
 """
 
-# ╔═╡ 273f6dc5-5ad3-45f0-ac5f-de3098d8293d
+# ╔═╡ 709fafc6-8edd-478c-be29-f44b8b0d611e
 md"""
-Das können wir genauso mit farbigen Bildern machen, indem wir jeden
-einzelnen Farbkanal (Rot, Grün, Blau) wie die Grauwerte vorher behandeln.
-Unten sehen wir von links oben nach rechts unten:
+Als nächstes verwenden wir das explizite Euler-Verfahren 
 
-- Anfangswert $u^0$ zur Zeit $t = 0$
-- Wert nach einem Schritt zur Zeit $t = 100$
-- Wert nach zwei Schritten zur Zeit $t = 1000$
-- Wert nach drei Schritten zur Zeit $t = 10^5$
-- Differenz von letztem Wert und ursprünglichem Bild
-- Ursprüngliches Bild
+$$u^{n+1} = u^{n} + \tau A u^{n}$$
+
+mit Schrittweite $\tau$.
+Hier sehen wir, dass das Verfahren instabil ist wenn $\tau$ zu groß ist.
+Die Instabilität erkennt man besser wenn mehr Zeitschritte durchgeführt werden.
 """
 
-# ╔═╡ d85df74a-35ca-447a-abb9-6737d28ef7cf
+# ╔═╡ f671ea11-de94-4068-b97b-b63c22f92fec
 md"""
-Bild: $(@bind img_name_evolution_color Select([
-	"chelsea",
-	"coffee",
-	"mandril",
-	"peppers",
-]))
+Anzahl Zeitschritte: $(@bind num_steps_explicit Select([100, 200, 500]))
+"""
+
+# ╔═╡ ac819375-d421-415b-a6c3-2cba60df7075
+md"""
+``τ`` = $(@bind τ_explicit Slider(range(0.2, 0.3, step = 0.002), show_value = true))
 """
 
 # ╔═╡ 4340e86a-e0fe-4cfe-9d1a-9bb686cbb2fd
@@ -130,18 +133,18 @@ end
 md"""
 The algorithm is based on the papers
 
-- Weickert, J., Hagenburg, K., Breuß, M., Vogel, O. (2013).
-  Linear Osmosis Models for Visual Computing.
-  In: Heyden, A., Kahl, F., Olsson, C., Oskarsson, M., Tai, XC. (eds)
-  Energy Minimization Methods in Computer Vision and Pattern Recognition.
-  EMMCVPR 2013.
+- Weickert, J., Hagenburg, K., Breuß, M., Vogel, O. (2013). 
+  Linear Osmosis Models for Visual Computing. 
+  In: Heyden, A., Kahl, F., Olsson, C., Oskarsson, M., Tai, XC. (eds) 
+  Energy Minimization Methods in Computer Vision and Pattern Recognition. 
+  EMMCVPR 2013. 
   Lecture Notes in Computer Science, vol 8081. Springer, Berlin, Heidelberg.
   [DOI: 10.1007/978-3-642-40395-8_3](https://doi.org/10.1007/978-3-642-40395-8_3)
-- Vogel, O., Hagenburg, K., Weickert, J., Setzer, S. (2013).
-  A Fully Discrete Theory for Linear Osmosis Filtering.
-  In: Kuijper, A., Bredies, K., Pock, T., Bischof, H. (eds)
-  Scale Space and Variational Methods in Computer Vision.
-  SSVM 2013.
+- Vogel, O., Hagenburg, K., Weickert, J., Setzer, S. (2013). 
+  A Fully Discrete Theory for Linear Osmosis Filtering. 
+  In: Kuijper, A., Bredies, K., Pock, T., Bischof, H. (eds) 
+  Scale Space and Variational Methods in Computer Vision. 
+  SSVM 2013. 
   Lecture Notes in Computer Science, vol 7893. Springer, Berlin, Heidelberg.
   [DOI: 10.1007/978-3-642-38267-3_31](https://doi.org/10.1007/978-3-642-38267-3_31)
 """
@@ -252,6 +255,42 @@ scale_from_0_1(img) = img .+ one(real(eltype(img))) / 255
 # ╔═╡ 23243cca-2a44-452a-8dad-a187663a93ba
 scale_to_0_1(img) = img .- one(real(eltype(img))) / 255
 
+# ╔═╡ 7e599a31-39be-4cf4-8173-ab0bbbc79d88
+function run_osmosis_implicit(img_input, d, τ, nsteps)
+	img = scale_from_0_1(img_input)
+	A = osmosis_matrix(img, d)
+	
+	u = vec(img)
+	unew = copy(u)
+	fac = lu(I - τ * A)
+	for _ in 1:nsteps
+		copyto!(u, unew)
+		ldiv!(unew, fac, u)
+	end
+	copyto!(u, unew)
+	
+	img_output = scale_to_0_1(reshape(u, size(img)))
+	return img_output
+end
+
+# ╔═╡ 0913ace9-80c1-4fc2-bfeb-9537bd5658e5
+function run_osmosis_explicit(img_input, d, τ, nsteps)
+	img = scale_from_0_1(img_input)
+	A = osmosis_matrix(img, d)
+	
+	u = vec(img)
+	unew = copy(u)
+	for _ in 1:nsteps
+		copyto!(u, unew)
+		mul!(unew, A, u, τ, 1)
+		# unew = u + τ * A * u
+	end
+	copyto!(u, unew)
+	
+	img_output = scale_to_0_1(reshape(u, size(img)))
+	return img_output
+end
+
 # ╔═╡ 375f178f-4892-43af-b037-049e2f4f79d0
 function drift_vector_field(img)
 	d1 = similar(img, (size(img, 1) - 1, size(img, 2)))
@@ -260,7 +299,7 @@ function drift_vector_field(img)
 	for j in axes(d1, 2), i in axes(d1, 1)
 		d1[i, j] = 2 * (img[i + 1, j] - img[i, j]) / (img[i + 1, j] + img[i, j])
 	end
-
+	
 	for j in axes(d2, 2), i in axes(d2, 1)
 		d2[i, j] = 2 * (img[i, j + 1] - img[i, j]) / (img[i, j + 1] + img[i, j])
 	end
@@ -274,93 +313,36 @@ let
 	img = scale_from_0_1(img_input)
 	d = drift_vector_field(img)
 	A = osmosis_matrix(img, d)
-
+	
 	u0 = vec(map(gray, img))
 	u0 .= mean(u0)
 	img0 = scale_to_0_1(map(ColorTypes.Gray, reshape(u0, size(img))))
-
+	
 	fac = lu(I - 1.0e2 * A)
 	u1e2 = fac \ u0
 	img1e2 = scale_to_0_1(map(ColorTypes.Gray, reshape(u1e2, size(img))))
-
+	
 	fac = lu(I - 9.0e2 * A)
 	u1e3 = fac \ u1e2
 	img1e3 = scale_to_0_1(map(ColorTypes.Gray, reshape(u1e3, size(img))))
-
+	
 	fac = lu(I - (1.0e5 - 1.0e3) * A)
 	u1e5 = fac \ u1e3
 	img1e5 = scale_to_0_1(map(ColorTypes.Gray, reshape(u1e5, size(img))))
-
-	mosaicview(img0, img1e2, img1e3, img1e5,
+	
+	mosaicview(img0, img1e2, img1e3, img1e5, 
 			   img_input - img1e5, img_input; nrow = 2)
 end
 
-# ╔═╡ 51d62816-5d3a-4f8c-89f2-4a71b045c2b5
-let
-	img_input = map(RGB{Float64}, testimage(img_name_evolution_color))
+# ╔═╡ b9a4b607-f28e-4b9f-8630-23728e2560db
+let τ = τ_explicit
+	img = map(Gray{Float64}, testimage(img_name_evolution_gray))
+	d = drift_vector_field(scale_from_0_1(img))
+	
+	img0 = copy(img)
+	img0 .= mean(img0)
 
-	img_red = scale_from_0_1(map(red, img_input))
-	d_red = drift_vector_field(img_red)
-	A_red = osmosis_matrix(img_red, d_red)
-
-	img_green = scale_from_0_1(map(green, img_input))
-	d_green = drift_vector_field(img_green)
-	A_green = osmosis_matrix(img_green, d_green)
-
-	img_blue = scale_from_0_1(map(blue, img_input))
-	d_blue = drift_vector_field(img_blue)
-	A_blue = osmosis_matrix(img_blue, d_blue)
-
-	u0_red = vec(img_red)
-	u0_red .= mean(u0_red)
-	u0_green = vec(img_green)
-	u0_green .= mean(u0_green)
-	u0_blue = vec(img_blue)
-	u0_blue .= mean(u0_blue)
-	img0 = reshape(
-		ColorTypes.RGB.(
-			scale_to_0_1(u0_red), scale_to_0_1(u0_green), scale_to_0_1(u0_blue)
-		),
-		size(img_input))
-
-	fac = lu(I - 1.0e2 * A_red)
-	u1e2_red = fac \ u0_red
-	fac = lu(I - 1.0e2 * A_green)
-	u1e2_green = fac \ u0_green
-	fac = lu(I - 1.0e2 * A_blue)
-	u1e2_blue = fac \ u0_blue
-	img1e2 = reshape(
-		ColorTypes.RGB.(
-			scale_to_0_1(u1e2_red), scale_to_0_1(u1e2_green), scale_to_0_1(u1e2_blue)
-		),
-		size(img_input))
-
-	fac = lu(I - 9.0e2 * A_red)
-	u1e3_red = fac \ u1e2_red
-	fac = lu(I - 9.0e2 * A_green)
-	u1e3_green = fac \ u1e2_green
-	fac = lu(I - 9.0e2 * A_blue)
-	u1e3_blue = fac \ u1e2_blue
-	img1e3 = reshape(
-		ColorTypes.RGB.(
-			scale_to_0_1(u1e3_red), scale_to_0_1(u1e3_green), scale_to_0_1(u1e3_blue)
-		),
-		size(img_input))
-
-	fac = lu(I - (1.0e5 - 1.0e3) * A_red)
-	u1e5_red = fac \ u1e3_red
-	fac = lu(I - (1.0e5 - 1.0e3) * A_green)
-	u1e5_green = fac \ u1e3_green
-	fac = lu(I - (1.0e5 - 1.0e3) * A_blue)
-	u1e5_blue = fac \ u1e3_blue
-	img1e5 = reshape(
-		ColorTypes.RGB.(
-			scale_to_0_1(u1e5_red), scale_to_0_1(u1e5_green), scale_to_0_1(u1e5_blue)
-		),
-		size(img_input))
-
-	mosaicview(img0, img1e2, img1e3, img1e5,
-			   img_input - img1e5, img_input; nrow = 2)
+	img = run_osmosis_explicit(img0, d, τ, num_steps_explicit)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1642,9 +1624,10 @@ version = "17.4.0+2"
 # ╟─1ecd46f3-adaa-4990-a540-6c00fae2106c
 # ╟─e746f460-0b13-4e03-b4b1-b70c0d548c58
 # ╟─62d067ae-7efb-4647-bdde-933d8e410d86
-# ╟─273f6dc5-5ad3-45f0-ac5f-de3098d8293d
-# ╟─d85df74a-35ca-447a-abb9-6737d28ef7cf
-# ╟─51d62816-5d3a-4f8c-89f2-4a71b045c2b5
+# ╟─709fafc6-8edd-478c-be29-f44b8b0d611e
+# ╟─f671ea11-de94-4068-b97b-b63c22f92fec
+# ╟─ac819375-d421-415b-a6c3-2cba60df7075
+# ╟─b9a4b607-f28e-4b9f-8630-23728e2560db
 # ╟─96351793-9bcc-4376-9c95-b6b42f061ad8
 # ╟─bc148aac-1ef7-4611-b187-72f1255ff05f
 # ╟─92377a23-ac4f-4d5f-9d57-a0a03693307c
@@ -1660,6 +1643,8 @@ version = "17.4.0+2"
 # ╠═3c03e633-4ba6-49a6-a0bd-f0a306456409
 # ╠═4785cd79-8cb4-4f87-9f69-99157a3be2bd
 # ╠═95b657cd-a73d-459a-bb74-0f5f15ef6db2
+# ╠═7e599a31-39be-4cf4-8173-ab0bbbc79d88
+# ╠═0913ace9-80c1-4fc2-bfeb-9537bd5658e5
 # ╟─802bb74e-ebed-41af-af25-9ef083207d0c
 # ╠═10864c2e-e6d6-4d50-ba3a-07117f32c8a6
 # ╠═031142c9-d2cd-40e4-ac1c-df533302d002
