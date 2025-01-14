@@ -85,14 +85,14 @@ $$\begin{aligned}\partial_u \Phi(u, v) \times \partial_v \Phi(u, v)
 \end{pmatrix}
 \\
 &= \begin{pmatrix}
-  \partial_u \Phi_1(u, v) \cdot \partial_v \Phi_2(u, v) - \partial_v \Phi_1(u, v) \cdot \partial_u \Phi_2(u, v) \\
   0 \\
-  0
+  0 \\
+  \partial_u \Phi_1(u, v) \cdot \partial_v \Phi_2(u, v) - \partial_v \Phi_1(u, v) \cdot \partial_u \Phi_2(u, v)
 \end{pmatrix}\end{aligned}.$$
 
 Also ist
 
-$$\partial_u \Phi(u, v) \times \partial_v \Phi(u, v)
+$$\| \partial_u \Phi(u, v) \times \partial_v \Phi(u, v) \|
 = |\partial_u \Phi_1(u, v) \cdot \partial_v \Phi_2(u, v) - \partial_v \Phi_1(u, v) \cdot \partial_u \Phi_2(u, v)|.$$
 
 Andererseits ist die zugehörige Jacobi-Determinante der Transformation
