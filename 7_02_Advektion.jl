@@ -107,7 +107,7 @@ md"""
 
 Hier betrachten wir die lineare Transportgleichung mit Geschwindigkeit
 
-$$a(x) = \begin{pmatrix}
+$$a(x,y) = \begin{pmatrix}
 	-y \\
 	x
 \end{pmatrix}$$

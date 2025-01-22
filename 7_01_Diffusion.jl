@@ -56,7 +56,7 @@ $$\begin{equation*}
 
 wobei der *Laplace-Operator* $\Delta$ gegeben ist durch
 
-$$\Delta u = \sum_{i=1}^d \partial_i^2 u.$$
+$$\Delta u = \sum_{i=1}^d \partial_{x_i}^2 u.$$
 
 Je nachdem, auf welchem räumlichen Gebiet die Diffusionsgleichung gegeben ist,
 muss sie noch mit passenden Randbedingungen ergänzt werden.
